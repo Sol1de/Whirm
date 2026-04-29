@@ -186,7 +186,6 @@ code {
 #app {
   width: 1126px;
   max-width: 100%;
-  margin: 0 auto;
   text-align: center;
   border-inline: 1px solid var(--border);
   min-height: 100svh;
@@ -370,13 +369,15 @@ code {
 }
 
 @layer base {
-	* {
-		@apply border-border outline-ring/50;
+  * {
+    @apply border-border outline-ring/50;
   }
-	body {
-		@apply bg-background text-foreground;
+
+  body {
+    @apply bg-background text-foreground;
   }
-	html {
-		@apply font-sans;
+
+  html {
+    @apply font-sans;
   }
 }
