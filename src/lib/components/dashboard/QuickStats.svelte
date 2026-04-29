@@ -1,10 +1,38 @@
 <script lang="ts">
-  import StatCard from './StatCard.svelte';
   import { connectionStore } from '$lib/stores/connection.svelte';
+  import StatCard from './StatCard.svelte';
+  import { Globe, Activity, Server } from '@lucide/svelte';
+
+  let state = $derived(connectionStore.state);
+
+  let throughputValue = $derived(
+    state.downloadSpeed > 0 || state.uploadSpeed > 0
+      ? `${state.downloadSpeed.toFixed(1)} MB/S`
+      : '—'
+  );
+
+  let throughputSubtitle = $derived(
+    state.uploadSpeed > 0 ? `${state.uploadSpeed.toFixed(1)} MB/S upload` : undefined
+  );
 </script>
 
 <div class="grid grid-cols-3 gap-4">
-  <StatCard title="Current IP" />
-  <StatCard title="Network Speed" />
-  <StatCard title="Active Proxy" />
+  <StatCard
+    label="CURRENT IP"
+    value={state.currentIp ?? '—'}
+    subtitle={state.activeProxy?.country}
+    icon={Globe}
+  />
+  <StatCard
+    label="THROUGHPUT"
+    value={throughputValue}
+    subtitle={throughputSubtitle}
+    icon={Activity}
+  />
+  <StatCard
+    label="ACTIVE PROXY"
+    value={state.activeProxy?.name ?? '—'}
+    subtitle={state.activeProxy?.category}
+    icon={Server}
+  />
 </div>

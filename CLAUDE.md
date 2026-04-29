@@ -29,6 +29,12 @@ All state lives in `src/lib/stores/`. Stores use the **`.svelte.ts` extension** 
 
 Stores expose state via getter properties and action methods. Components read state through getters and never write directly to store internals.
 
+Current stores:
+- `navigationStore` — active route (`'dashboard' | 'proxies' | 'settings'`)
+- `proxyStore` — proxy list + `isAddSheetOpen` flag; `openAddSheet()` / `closeAddSheet()` / `addProxy()` / `removeProxy()` / `updateProxy()`
+- `connectionStore` — tunnel status, active proxy, IP, speeds; `connect(proxyId)` / `disconnect()`
+- `settingsStore` — persists to `localStorage` under key `kreios-settings`; exposes `draft`, `update(patch)`, `save()`, `reset()`
+
 ### Tauri integration
 The Rust backend lives in `src-tauri/`. Frontend-to-Rust calls use `invoke()` from `@tauri-apps/api/core`. By convention, all `invoke()` calls are placed exclusively in store methods (never inside components). The Rust side currently has no custom commands — `src-tauri/src/lib.rs` is the entry point for adding them.
 
@@ -50,8 +56,10 @@ Icons come from `@lucide/svelte` (already installed). Import as named exports: `
 ### Styling
 - Tailwind CSS 4 (Vite plugin, no `tailwind.config.js`)
 - Dark theme only — all CSS tokens in `src/app.css` under `:root` use `oklch` color space
-- shadcn tokens (`--background`, `--foreground`, `--card`, etc.) and custom app tokens (`--bg`, `--text-h`, `--border`) coexist in the same `:root` block
+- shadcn tokens (`--background`, `--foreground`, `--card`, etc.) are the only custom tokens; `--radius` is set to `0.125rem` (2 px, nearly square corners)
 - The `cn()` utility from `$lib/utils` merges Tailwind classes (clsx + tailwind-merge)
+- Two fonts: **Inter Variable** (body/UI, `font-sans`) and **Space Grotesk** (logo, section labels, monospace values, `font-grotesk` CSS var). Use `font-['Space_Grotesk',sans-serif]` or the `font-grotesk` Tailwind utility
+- Design palette: `zinc-950` bg · `zinc-900` cards/sidebar · `zinc-800` borders · `emerald-500` connected state · `violet-300` accent dot · `rounded-[2px]` on all interactive elements
 
 ### Svelte 5 patterns
 This codebase uses Svelte 5 runes exclusively:

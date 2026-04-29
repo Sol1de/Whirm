@@ -1,18 +1,78 @@
 <script lang="ts">
   import type { Proxy } from '$lib/types';
-  import * as Table from '$lib/components/ui/table';
-  import { Badge } from '$lib/components/ui/badge';
-  import { Button } from '$lib/components/ui/button';
+  import { Plug2, Pencil, Trash2 } from '@lucide/svelte';
+  import { proxyStore } from '$lib/stores/proxy.svelte';
 
   interface Props {
     proxy: Proxy;
-    onEdit?: (proxy: Proxy) => void;
-    onDelete?: (id: string) => void;
   }
 
-  let { proxy, onEdit, onDelete }: Props = $props();
+  let { proxy }: Props = $props();
+
+  function countryCodeToFlag(code: string): string {
+    if (!code || code.length !== 2) return '';
+    return code
+      .toUpperCase()
+      .split('')
+      .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+      .join('');
+  }
 </script>
 
-<Table.Row>
-  <!-- Name | Host:Port | Protocol (badge) | Country (flag + text) | Speed | Actions (3 buttons) -->
-</Table.Row>
+<tr class="border-b border-zinc-800 last:border-0">
+  <!-- Name -->
+  <td class="px-6 py-[22.5px]">
+    <span class="text-base font-medium text-white" style="font-family: Inter, sans-serif;"
+      >{proxy.name}</span
+    >
+  </td>
+
+  <!-- Host:Port -->
+  <td class="px-6 py-[22.5px]">
+    <span class="font-['Space_Grotesk',sans-serif] text-[13px] text-zinc-300"
+      >{proxy.host}:{proxy.port}</span
+    >
+  </td>
+
+  <!-- Protocol badge -->
+  <td class="px-6 py-[22.5px]">
+    <span
+      class="rounded-[2px] border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300"
+      >{proxy.protocol}</span
+    >
+  </td>
+
+  <!-- Region -->
+  <td class="px-6 py-[22.5px]">
+    <div class="flex items-center gap-2">
+      <span class="text-base">{countryCodeToFlag(proxy.countryCode)}</span>
+      <span class="text-sm text-zinc-400">{proxy.country}</span>
+    </div>
+  </td>
+
+  <!-- Latency -->
+  <td class="px-6 py-[22.5px]">
+    <span class="text-sm text-zinc-400">
+      {proxy.speed != null ? `${proxy.speed}ms` : '—'}
+    </span>
+  </td>
+
+  <!-- Actions -->
+  <td class="px-6 py-[22.5px]">
+    <div class="flex items-center justify-end gap-2">
+      <button class="text-zinc-500 transition-colors hover:text-white" title="Connect">
+        <Plug2 class="h-4 w-4" />
+      </button>
+      <button class="text-zinc-500 transition-colors hover:text-white" title="Edit">
+        <Pencil class="h-4 w-4" />
+      </button>
+      <button
+        class="text-zinc-500 transition-colors hover:text-red-400"
+        title="Delete"
+        onclick={() => proxyStore.removeProxy(proxy.id)}
+      >
+        <Trash2 class="h-4 w-4" />
+      </button>
+    </div>
+  </td>
+</tr>
