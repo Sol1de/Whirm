@@ -1,25 +1,46 @@
 <script lang="ts">
   import { proxyStore } from '$lib/stores/proxy.svelte';
   import ProxyTableRow from './ProxyTableRow.svelte';
-  import * as Table from '$lib/components/ui/table';
+  import { Network, Plus } from '@lucide/svelte';
 </script>
 
-<div class="rounded-lg border border-border bg-card">
-  <Table.Root>
-    <Table.Header>
-      <Table.Row>
-        <Table.Head>Name</Table.Head>
-        <Table.Head>Host : Port</Table.Head>
-        <Table.Head>Protocol</Table.Head>
-        <Table.Head>Country</Table.Head>
-        <Table.Head>Speed</Table.Head>
-        <Table.Head class="text-right">Actions</Table.Head>
-      </Table.Row>
-    </Table.Header>
-    <Table.Body>
+<div class="rounded-[2px] border border-zinc-800 bg-zinc-900/50 p-px">
+  <table class="w-full">
+    <!-- Header -->
+    <thead>
+      <tr class="border-b border-zinc-800 bg-zinc-900/80">
+        {#each ['NAME', 'HOST:PORT', 'PROTOCOL', 'REGION', 'LATENCY', 'ACTIONS'] as col, i}
+          <th
+            class="px-6 py-4 font-['Space_Grotesk',sans-serif] text-xs font-medium uppercase tracking-[0.6px] text-zinc-500
+              {i === 5 ? 'text-right' : 'text-left'}"
+          >
+            {col}
+          </th>
+        {/each}
+      </tr>
+    </thead>
+
+    <!-- Body -->
+    <tbody>
       {#each proxyStore.proxies as proxy (proxy.id)}
         <ProxyTableRow {proxy} />
+      {:else}
+        <tr>
+          <td colspan="6">
+            <div class="flex flex-col items-center justify-center py-16 text-center">
+              <Network class="mb-4 h-12 w-12 text-zinc-700" />
+              <p class="font-medium text-white">No proxies added</p>
+              <p class="mt-1 text-sm text-zinc-500">Add your first proxy to get started</p>
+              <button
+                class="mt-4 rounded-[2px] bg-white px-4 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+                onclick={proxyStore.openAddSheet}
+              >
+                Add Proxy
+              </button>
+            </div>
+          </td>
+        </tr>
       {/each}
-    </Table.Body>
-  </Table.Root>
+    </tbody>
+  </table>
 </div>

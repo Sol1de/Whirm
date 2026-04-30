@@ -16,6 +16,7 @@ export interface Proxy {
   username?: string;
   password?: string;
   status: ProxyStatus;
+  category?: string;
   lastUsed?: Date;
 }
 

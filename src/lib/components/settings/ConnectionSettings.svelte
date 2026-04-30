@@ -1,43 +1,96 @@
 <script lang="ts">
-  import { Input } from '$lib/components/ui/input';
-  import { Label } from '$lib/components/ui/label';
-  import { Switch } from '$lib/components/ui/switch';
-  import * as Select from '$lib/components/ui/select';
-
-  let port = $state(5000);
-  let enabled = $state(true);
-  let protocol = $state('SOCKS5');
+  import { Network } from "@lucide/svelte";
+  import { Switch } from "$lib/components/ui/switch";
+  import * as Select from "$lib/components/ui/select";
+  import { settingsStore } from "$lib/stores/settings.svelte";
 </script>
 
-<section class="rounded-lg border border-border bg-card">
-  <div class="flex items-center gap-2 border-b border-border px-6 py-4">
-    <!-- Section icon -->
-    <h2 class="font-medium">Connection Settings</h2>
+<section class="rounded-[2px] border border-zinc-800 bg-zinc-900">
+  <!-- Section header -->
+  <div class="flex items-center gap-2 border-b border-zinc-800 px-6 py-4">
+    <Network class="h-4 w-4 text-zinc-400" />
+    <span
+      class="font-['Space_Grotesk',sans-serif] text-xs font-medium uppercase tracking-[0.6px] text-zinc-400"
+      >CONNECTION PROTOCOL</span
+    >
   </div>
 
-  <div class="divide-y divide-border">
-    <!-- Port row -->
-    <div class="flex items-center justify-between px-6 py-5">
-      <div>
-        <!-- Label + description slot -->
+  <div class="divide-y divide-zinc-800">
+    <!-- Row 1: Global Timeout -->
+    <div class="flex items-center justify-between px-6 py-6">
+      <div class="flex flex-col gap-1">
+        <p class="text-sm text-white" style="font-family: Inter, sans-serif;">
+          Global Timeout
+        </p>
+        <p class="text-xs text-zinc-500">
+          Maximum latency allowed before session drop (ms)
+        </p>
       </div>
-      <Input type="number" bind:value={port} class="w-32 text-right" />
+      <input
+        type="number"
+        value={settingsStore.draft.globalTimeout}
+        oninput={(e) =>
+          settingsStore.update({
+            globalTimeout:
+              parseInt((e.target as HTMLInputElement).value, 10) || 0,
+          })}
+        class="w-32 rounded-[2px] border border-zinc-800 bg-[#09090b] px-3 py-2 text-right font-['Space_Grotesk',sans-serif] text-sm text-white focus:outline-none focus:ring-1 focus:ring-zinc-600"
+      />
     </div>
 
-    <!-- Enable toggle row -->
-    <div class="flex items-center justify-between px-6 py-5">
-      <div>
-        <!-- Label + description slot -->
+    <!-- Row 2: DNS Leak Protection -->
+    <div class="flex items-center justify-between px-6 py-6">
+      <div class="flex flex-col gap-1">
+        <p class="text-sm text-white" style="font-family: Inter, sans-serif;">
+          DNS Leak Protection
+        </p>
+        <p class="text-xs text-zinc-500">
+          Enforce encrypted DNS queries through proxy tunnel
+        </p>
       </div>
-      <Switch bind:checked={enabled} />
+      <Switch
+        checked={settingsStore.draft.dnsLeakProtection}
+        onCheckedChange={(v) => settingsStore.update({ dnsLeakProtection: v })}
+      />
     </div>
 
-    <!-- Protocol row -->
-    <div class="flex items-center justify-between px-6 py-5">
-      <div>
-        <!-- Label + description slot -->
+    <!-- Row 3: Proxy Protocol -->
+    <div class="flex items-center justify-between px-6 py-6">
+      <div class="flex flex-col gap-1">
+        <p class="text-sm text-white" style="font-family: Inter, sans-serif;">
+          Proxy Protocol
+        </p>
+        <p class="text-xs text-zinc-500">
+          Select the primary tunneling architecture
+        </p>
       </div>
-      <!-- Select SOCKS5 / HTTP / HTTPS slot -->
+      <Select.Root
+        type="single"
+        value={settingsStore.draft.proxyProtocol}
+        onValueChange={(v) =>
+          v &&
+          settingsStore.update({
+            proxyProtocol: v as "SOCKS5" | "HTTP" | "HTTPS",
+          })}
+      >
+        <Select.Trigger
+          class="w-48 rounded-[2px] border-zinc-800 bg-[#09090b] text-sm text-white"
+        >
+          {settingsStore.draft.proxyProtocol === "SOCKS5"
+            ? "SOCKS5"
+            : settingsStore.draft.proxyProtocol}
+        </Select.Trigger>
+        <Select.Content class="rounded-[2px] border-zinc-800 bg-zinc-900">
+          <Select.Item value="SOCKS5" class="text-sm text-white"
+            >SOCKS5 (Recommended)</Select.Item
+          >
+          <Select.Item value="HTTP" class="text-sm text-white">HTTP</Select.Item
+          >
+          <Select.Item value="HTTPS" class="text-sm text-white"
+            >HTTPS</Select.Item
+          >
+        </Select.Content>
+      </Select.Root>
     </div>
   </div>
 </section>
