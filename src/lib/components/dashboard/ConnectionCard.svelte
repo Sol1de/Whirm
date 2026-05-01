@@ -1,5 +1,7 @@
 <script lang="ts">
   import { connectionStore } from "$lib/stores/connection.svelte";
+  import { proxyStore } from "$lib/stores/proxy.svelte";
+  import { toast } from "svelte-sonner";
   import { CodeXml } from "@lucide/svelte";
 
   const statusConfig = {
@@ -7,7 +9,7 @@
       dot: "bg-emerald-500",
       overlay: "bg-emerald-500/20",
       label: "Connected",
-      subtitle: "AES-256-GCM Encryption Active",
+      subtitle: "Traffic routing through proxy",
       subtitleColor: "text-emerald-500",
     },
     connecting: {
@@ -30,6 +32,33 @@
     statusConfig[connectionStore.state.status] ?? statusConfig.disconnected,
   );
   let isConnected = $derived(connectionStore.state.status === "connected");
+  let isConnecting = $derived(connectionStore.state.status === "connecting");
+
+  let targetProxy = $derived(
+    connectionStore.state.activeProxy ?? proxyStore.proxies[0] ?? null,
+  );
+
+  let isDisabled = $derived(
+    isConnecting || (!isConnected && targetProxy === null),
+  );
+
+  let proxyLabel = $derived(targetProxy?.name ?? "No proxy configured");
+
+  async function handleToggle() {
+    if (isConnected) {
+      try {
+        await connectionStore.disconnect();
+      } catch (error) {
+        toast.error(`Disconnect failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    } else if (targetProxy) {
+      try {
+        await connectionStore.connect(targetProxy.id);
+      } catch (error) {
+        toast.error(`Connection failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  }
 </script>
 
 <div
@@ -63,14 +92,17 @@
 
   <!-- Right: buttons -->
   <div class="flex items-center gap-3">
+    <span class="text-sm text-zinc-400">{proxyLabel}</span>
     <button
-      class="rounded-[2px] bg-white px-5 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90"
-      onclick={() =>
-        isConnected
-          ? connectionStore.disconnect()
-          : connectionStore.connect("")}
+      class="rounded-[2px] bg-white px-5 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+      disabled={isDisabled}
+      onclick={handleToggle}
     >
-      {isConnected ? "⏻  DISCONNECT" : "⏻  CONNECT"}
+      {isConnected
+        ? "⏻  DISCONNECT"
+        : isConnecting
+          ? "⏻  CONNECTING…"
+          : "⏻  CONNECT"}
     </button>
     <button
       class="rounded-[2px] border border-zinc-800 p-2 text-zinc-400 transition-colors hover:text-white"

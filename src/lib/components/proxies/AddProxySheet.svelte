@@ -19,6 +19,16 @@
   let protocol = $state<ProxyProtocol>("SOCKS5");
   let username = $state("");
   let password = $state("");
+  let isTesting = $state(false);
+
+  function resetForm() {
+    proxyName = "";
+    host = "";
+    port = "";
+    protocol = "SOCKS5";
+    username = "";
+    password = "";
+  }
 
   const protocols: ProxyProtocol[] = ["HTTPS", "SOCKS5", "HTTP"];
 
@@ -45,22 +55,42 @@
       password: password.trim() || undefined,
     });
     toast.success("Proxy added");
-    // Reset form
-    proxyName = "";
-    host = "";
-    port = "";
-    protocol = "SOCKS5";
-    username = "";
-    password = "";
+    resetForm();
     onClose();
   }
 
-  function handleTest() {
-    toast.info("Connection test not yet implemented");
+  async function handleTest() {
+    if (!host.trim() || !port.trim()) {
+      toast.error("Enter a host and port before testing");
+      return;
+    }
+    const portNum = parseInt(port, 10);
+    if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+      toast.error("Port must be a number between 1 and 65535");
+      return;
+    }
+
+    isTesting = true;
+    toast.info("Testing connection…");
+
+    try {
+      const latency = await proxyStore.testProxy(
+        host.trim(),
+        portNum,
+        protocol,
+        username.trim() || undefined,
+        password.trim() || undefined,
+      );
+      toast.success(`Proxy reachable — latency: ${latency}ms`);
+    } catch (error) {
+      toast.error(`Test failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      isTesting = false;
+    }
   }
 </script>
 
-<Sheet.Root {open} onOpenChange={(v) => !v && onClose()}>
+<Sheet.Root {open} onOpenChange={(v) => { if (!v) { resetForm(); onClose(); } }}>
   <Sheet.Content
     side="right"
     class="flex w-[400px] flex-col border-zinc-800 bg-zinc-900 p-0 [&>button]:hidden"
@@ -196,10 +226,11 @@
         Save Proxy
       </button>
       <button
-        class="rounded-[2px] border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800"
+        class="rounded-[2px] border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+        disabled={isTesting}
         onclick={handleTest}
       >
-        Test
+        {isTesting ? "Testing…" : "Test"}
       </button>
     </div>
   </Sheet.Content>
