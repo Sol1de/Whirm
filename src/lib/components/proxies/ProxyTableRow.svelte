@@ -2,6 +2,8 @@
   import type { Proxy } from '$lib/types';
   import { Plug2, Pencil, Trash2 } from '@lucide/svelte';
   import { proxyStore } from '$lib/stores/proxy.svelte';
+  import { connectionStore } from '$lib/stores/connection.svelte';
+  import { toast } from 'svelte-sonner';
 
   interface Props {
     proxy: Proxy;
@@ -16,6 +18,26 @@
       .split('')
       .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
       .join('');
+  }
+
+  let isActive = $derived(connectionStore.state.activeProxy?.id === proxy.id);
+  let isConnecting = $derived(connectionStore.state.status === 'connecting');
+
+  async function handleConnect() {
+    if (isActive) {
+      try {
+        await connectionStore.disconnect();
+      } catch (error) {
+        toast.error(`Disconnect failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    } else {
+      try {
+        await connectionStore.connect(proxy.id);
+        toast.success(`Connected to ${proxy.name}`);
+      } catch (error) {
+        toast.error(`Failed to connect to ${proxy.name}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
   }
 </script>
 
@@ -60,7 +82,14 @@
   <!-- Actions -->
   <td class="px-6 py-[22.5px]">
     <div class="flex items-center justify-end gap-2">
-      <button class="text-zinc-500 transition-colors hover:text-white" title="Connect">
+      <button
+        class="transition-colors disabled:cursor-not-allowed disabled:opacity-40 {isActive
+          ? 'text-emerald-500 hover:text-emerald-400'
+          : 'text-zinc-500 hover:text-white'}"
+        title={isActive ? 'Disconnect' : 'Connect'}
+        disabled={isConnecting}
+        onclick={handleConnect}
+      >
         <Plug2 class="h-4 w-4" />
       </button>
       <button class="text-zinc-500 transition-colors hover:text-white" title="Edit">

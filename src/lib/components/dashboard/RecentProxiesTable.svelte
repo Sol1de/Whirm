@@ -1,8 +1,19 @@
 <script lang="ts">
   import { proxyStore } from '$lib/stores/proxy.svelte';
   import { navigation } from '$lib/stores/navigation.svelte';
+  import { connectionStore } from '$lib/stores/connection.svelte';
+  import { toast } from 'svelte-sonner';
 
   let recentProxies = $derived(proxyStore.proxies.slice(0, 5));
+  let isConnecting = $derived(connectionStore.state.status === 'connecting');
+
+  async function handleConnect(proxyId: string) {
+    try {
+      await connectionStore.connect(proxyId);
+    } catch (err: unknown) {
+      toast.error(`Connection failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
 
   const protocolColors: Record<string, string> = {
     SOCKS5: 'SOCKS5',
@@ -76,10 +87,9 @@
             </td>
             <td class="px-6 py-4 text-right">
               <button
-                class="text-xs font-medium tracking-wide text-zinc-400 transition-colors hover:text-white"
-                onclick={() => {
-                  /* TODO: reconnect */
-                }}
+                class="text-xs font-medium tracking-wide text-zinc-400 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={isConnecting}
+                onclick={() => handleConnect(proxy.id)}
               >
                 RECONNECT
               </button>

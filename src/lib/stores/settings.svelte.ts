@@ -6,7 +6,7 @@ interface Settings {
   proxyProtocol: ProxyProtocol;
 }
 
-const STORAGE_KEY = 'kreios-settings';
+const STORAGE_KEY = 'whirm-settings';
 
 const defaults: Settings = {
   globalTimeout: 5000,

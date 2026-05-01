@@ -33,10 +33,17 @@ Current stores:
 - `navigationStore` — active route (`'dashboard' | 'proxies' | 'settings'`)
 - `proxyStore` — proxy list + `isAddSheetOpen` flag; `openAddSheet()` / `closeAddSheet()` / `addProxy()` / `removeProxy()` / `updateProxy()`
 - `connectionStore` — tunnel status, active proxy, IP, speeds; `connect(proxyId)` / `disconnect()`
-- `settingsStore` — persists to `localStorage` under key `kreios-settings`; exposes `draft`, `update(patch)`, `save()`, `reset()`
+- `settingsStore` — persists to `localStorage` under key `whirm-settings`; exposes `draft`, `update(patch)`, `save()`, `reset()`
 
 ### Tauri integration
-The Rust backend lives in `src-tauri/`. Frontend-to-Rust calls use `invoke()` from `@tauri-apps/api/core`. By convention, all `invoke()` calls are placed exclusively in store methods (never inside components). The Rust side currently has no custom commands — `src-tauri/src/lib.rs` is the entry point for adding them.
+The Rust backend lives in `src-tauri/`. Frontend-to-Rust calls use `invoke()` from `@tauri-apps/api/core`. By convention, all `invoke()` calls are placed exclusively in store methods (never inside components).
+
+Three Tauri commands are defined in `src-tauri/src/lib.rs`:
+- **`connect_proxy`** — tests connectivity via `api.ipify.org` first (no system change yet), then saves the current system proxy and applies the new one; returns the current public IP. Parameters: `host`, `port`, `protocol` (`SOCKS5`|`HTTP`|`HTTPS`), optional `username`/`password`.
+- **`disconnect_proxy`** — restores the saved system proxy; no-op if no proxy was saved in this session.
+- **`test_proxy`** — same signature as `connect_proxy` but only measures latency without saving/restoring; returns milliseconds.
+
+`AppState` (held via Tauri's managed state) stores `saved_proxy: Mutex<Option<Sysproxy>>` to enable restoration on disconnect. Error messages from the Rust backend are in French. Key Rust deps: `sysproxy` (system proxy reads/writes), `reqwest` with SOCKS5 support (connectivity test).
 
 ### Component structure
 - `src/lib/components/layout/` — `Sidebar` and `TopAppBar` are shared across all three pages
@@ -60,6 +67,15 @@ Icons come from `@lucide/svelte` (already installed). Import as named exports: `
 - The `cn()` utility from `$lib/utils` merges Tailwind classes (clsx + tailwind-merge)
 - Two fonts: **Inter Variable** (body/UI, `font-sans`) and **Space Grotesk** (logo, section labels, monospace values, `font-grotesk` CSS var). Use `font-['Space_Grotesk',sans-serif]` or the `font-grotesk` Tailwind utility
 - Design palette: `zinc-950` bg · `zinc-900` cards/sidebar · `zinc-800` borders · `emerald-500` connected state · `violet-300` accent dot · `rounded-[2px]` on all interactive elements
+
+### Types
+Core types live in `src/lib/types/index.ts`:
+- `Route` — `'dashboard' | 'proxies' | 'settings'`
+- `ProxyProtocol` — `'SOCKS5' | 'HTTP' | 'HTTPS'`
+- `ProxyStatus` — `'active' | 'inactive' | 'error'`
+- `ConnectionStatus` — `'connected' | 'disconnected' | 'connecting'`
+- `Proxy` — main entity: `id`, `name`, `host`, `port`, `protocol`, `country`, `countryCode`, optional `speed`, `username`, `password`, `status`, `category`, `lastUsed`
+- `ConnectionState` — `status`, `activeProxy`, `currentIp`, `downloadSpeed`, `uploadSpeed`
 
 ### Svelte 5 patterns
 This codebase uses Svelte 5 runes exclusively:
