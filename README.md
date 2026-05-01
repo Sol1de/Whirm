@@ -1,4 +1,4 @@
-# Kreios Proxy
+# Whirm
 
 Application desktop de gestion de proxies. Permet de configurer, organiser et basculer entre des proxies SOCKS5, HTTP et HTTPS depuis une interface unifiée.
 

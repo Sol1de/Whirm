@@ -1,4 +1,5 @@
-import type { Proxy } from '$lib/types';
+import type { Proxy, ProxyProtocol } from '$lib/types';
+import { invoke } from '@tauri-apps/api/core';
 
 function createProxyStore() {
   let proxies = $state<Proxy[]>([]);
@@ -25,7 +26,22 @@ function createProxyStore() {
     },
     updateProxy(id: string, updates: Partial<Proxy>) {
       proxies = proxies.map((p) => (p.id === id ? { ...p, ...updates } : p));
-    }
+    },
+    testProxy(
+      host: string,
+      port: number,
+      protocol: ProxyProtocol,
+      username?: string,
+      password?: string,
+    ) {
+      return invoke<number>('test_proxy', {
+        host,
+        port,
+        protocol,
+        username: username ?? null,
+        password: password ?? null,
+      });
+    },
   };
 }
 

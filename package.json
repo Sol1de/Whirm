@@ -1,5 +1,5 @@
 {
-  "name": "kreios-proxy",
+  "name": "whirm",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -33,6 +33,7 @@
     "vite": "^8.0.10"
   },
   "dependencies": {
-    "@fontsource/space-grotesk": "^5.2.10"
+    "@fontsource/space-grotesk": "^5.2.10",
+    "@tauri-apps/api": "^2.11.0"
   }
 }
