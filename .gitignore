@@ -26,6 +26,7 @@ dist-ssr
 # Tauri — Rust build artifacts (can be several GB)
 src-tauri/target/
 src-tauri/gen/
+src-tauri/Cargo.toml
 
 # Environment variables
 .env
