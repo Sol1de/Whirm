@@ -13,23 +13,23 @@ fn save_original_proxy(state: &AppState) -> Result<(), String> {
     let mut saved = state
         .saved_proxy
         .lock()
-        .map_err(|e| format!("Mutex corrompu (lock empoisonné) : {e}"))?;
+        .map_err(|e| format!("Corrupted mutex (poisoned lock): {e}"))?;
     if saved.is_none() {
         *saved = Some(
             Sysproxy::get_system_proxy()
-                .map_err(|e| format!("Impossible de lire le proxy système actuel : {e}"))?,
+                .map_err(|e| format!("Failed to read current system proxy: {e}"))?,
         );
     }
     Ok(())
 }
 
 fn build_proxy_client(proxy_url: &str) -> Result<reqwest::Client, String> {
-    let proxy = Proxy::all(proxy_url).map_err(|e| format!("URL de proxy invalide : {e}"))?;
+    let proxy = Proxy::all(proxy_url).map_err(|e| format!("Invalid proxy URL: {e}"))?;
     reqwest::Client::builder()
         .proxy(proxy)
         .timeout(Duration::from_secs(10))
         .build()
-        .map_err(|e| format!("Impossible de créer le client HTTP : {e}"))
+        .map_err(|e| format!("Failed to create HTTP client: {e}"))
 }
 
 async fn check_connectivity(proxy_url: &str) -> Result<String, String> {
@@ -39,10 +39,10 @@ async fn check_connectivity(proxy_url: &str) -> Result<String, String> {
         .get("https://api.ipify.org")
         .send()
         .await
-        .map_err(|e| format!("Proxy injoignable (impossible de se connecter) : {e}"))?
+        .map_err(|e| format!("Proxy unreachable (connection failed): {e}"))?
         .text()
         .await
-        .map_err(|e| format!("Impossible de lire la réponse IP : {e}"))?;
+        .map_err(|e| format!("Failed to read IP response: {e}"))?;
 
     Ok(ip.trim().to_string())
 }
@@ -100,7 +100,7 @@ async fn connect_proxy(
     };
     new_proxy
         .set_system_proxy()
-        .map_err(|e| format!("Impossible d'appliquer le proxy système : {e}"))?;
+        .map_err(|e| format!("Failed to apply system proxy: {e}"))?;
 
     Ok(ip)
 }
@@ -108,14 +108,14 @@ async fn connect_proxy(
 #[tauri::command]
 async fn disconnect_proxy(state: State<'_, AppState>) -> Result<(), String> {
     let saved = state.saved_proxy.lock()
-        .map_err(|_| "Mutex corrompu (lock empoisonné)".to_string())?
+        .map_err(|_| "Corrupted mutex (poisoned lock)".to_string())?
         .take();
 
     match saved {
         Some(proxy) => {
             proxy
                 .set_system_proxy()
-                .map_err(|e| format!("Impossible de restaurer le proxy système : {e}"))?;
+                .map_err(|e| format!("Failed to restore system proxy: {e}"))?;
         }
         None => {
             return Ok(());
@@ -149,7 +149,7 @@ async fn test_proxy(
         .get("https://api.ipify.org")
         .send()
         .await
-        .map_err(|e| format!("Proxy injoignable : {e}"))?;
+        .map_err(|e| format!("Proxy unreachable: {e}"))?;
 
     let latency_ms = start.elapsed().as_millis() as u64;
 
