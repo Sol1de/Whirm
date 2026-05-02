@@ -33,7 +33,7 @@ Current stores:
 - `navigationStore` — active route (`'dashboard' | 'proxies' | 'settings'`)
 - `proxyStore` — proxy list + `isAddSheetOpen` flag; `openAddSheet()` / `closeAddSheet()` / `addProxy()` / `removeProxy()` / `updateProxy()`
 - `connectionStore` — tunnel status, active proxy, IP, speeds; `connect(proxyId)` / `disconnect()`
-- `settingsStore` — persists to `localStorage` under key `whirm-settings`; exposes `draft`, `update(patch)`, `save()`, `reset()`
+- `settingsStore` — persists to `localStorage` under key `whirm-settings`; exposes `draft`, `update(patch)`, `save()`, `reset()`. Settings fields: `globalTimeout` (default 5000 ms), `dnsLeakProtection` (boolean), `proxyProtocol` (default `'SOCKS5'`)
 
 ### Tauri integration
 The Rust backend lives in `src-tauri/`. Frontend-to-Rust calls use `invoke()` from `@tauri-apps/api/core`. By convention, all `invoke()` calls are placed exclusively in store methods (never inside components).
@@ -43,7 +43,9 @@ Three Tauri commands are defined in `src-tauri/src/lib.rs`:
 - **`disconnect_proxy`** — restores the saved system proxy; no-op if no proxy was saved in this session.
 - **`test_proxy`** — same signature as `connect_proxy` but only measures latency without saving/restoring; returns milliseconds.
 
-`AppState` (held via Tauri's managed state) stores `saved_proxy: Mutex<Option<Sysproxy>>` to enable restoration on disconnect. Error messages from the Rust backend are in French. Key Rust deps: `sysproxy` (system proxy reads/writes), `reqwest` with SOCKS5 support (connectivity test).
+`AppState` (held via Tauri's managed state) stores `saved_proxy: Mutex<Option<Sysproxy>>` to enable restoration on disconnect. The app registers an `on_window_event` handler that automatically restores the system proxy on close/crash — this prevents users from being left with stale proxy settings if the app exits unexpectedly. Error messages from the Rust backend are in French. Key Rust deps: `sysproxy` (system proxy reads/writes), `reqwest` with SOCKS5 support (connectivity test).
+
+Always use typed generics on `invoke()` calls: `invoke<string>(...)`, `invoke<number>(...)`, etc. All `invoke()` calls belong in store methods only, never in components.
 
 ### Component structure
 - `src/lib/components/layout/` — `Sidebar` and `TopAppBar` are shared across all three pages
