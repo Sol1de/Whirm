@@ -93,7 +93,7 @@ Core types live in `src/lib/types/index.ts`:
 - `ProxyProtocol` — `'SOCKS5' | 'HTTP' | 'HTTPS'`
 - `ProxyStatus` — `'active' | 'inactive' | 'error'`
 - `ConnectionStatus` — `'connected' | 'disconnected' | 'connecting'`
-- `Proxy` — main entity: `id`, `name`, `host`, `port`, `protocol`, `country`, `countryCode`, `status`, optional `username`, `password`, `category`, `lastUsedAt`
+- `Proxy` — main entity: `id`, `name`, `host`, `port`, `protocol`, `country`, `countryCode`, `status`, optional `username`, `category`, `lastUsedAt`
 - `ConnectionState` — `status`, `activeProxy`, `currentIp`, `downloadSpeed`, `uploadSpeed`
 - `ConnectionSession` — `id`, `proxyId`, `connectedAt`, `disconnectedAt`, `ipAddress`
 

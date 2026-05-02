@@ -54,7 +54,7 @@ function createProxyService() {
       await invoke<void>('delete_proxy', { id });
       proxies = proxies.filter((p) => p.id !== id);
     },
-    async update(id: string, updates: Partial<Proxy>): Promise<Proxy> {
+    async update(id: string, updates: Partial<Proxy>, newPassword?: string): Promise<Proxy> {
       const current = proxies.find((p) => p.id === id);
       if (!current) throw new Error(`Proxy not found: ${id}`);
 
@@ -69,7 +69,7 @@ function createProxyService() {
           country: merged.country,
           countryCode: merged.countryCode,
           username: merged.username ?? null,
-          newPassword: updates.password ?? null,
+          newPassword: newPassword ?? null,
           status: merged.status,
           category: merged.category ?? null,
         },
