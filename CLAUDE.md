@@ -24,28 +24,45 @@ There are no tests in this project yet.
 ### Routing
 Navigation is handled entirely via a `$state` store in `src/lib/stores/navigation.svelte.ts`. The `Sidebar` component calls `navigation.navigate(route)`, and `App.svelte` renders one of three page components via `{#if}` blocks. Routes are typed as `'dashboard' | 'proxies' | 'settings'`.
 
-### State management
-All state lives in `src/lib/stores/`. Stores use the **`.svelte.ts` extension** — this is mandatory for Svelte 5 runes (`$state`, `$derived`) to work in non-component files. Using plain `.ts` will cause a compiler error.
+### State management & services
+Frontend state and backend communication live in `src/lib/services/`. Services that hold reactive state use the **`.svelte.ts` extension** (mandatory for Svelte 5 runes in non-component files — plain `.ts` causes a compiler error). Stateless services can use plain `.ts`.
 
-Stores expose state via getter properties and action methods. Components read state through getters and never write directly to store internals.
+Services expose state via getter properties and action methods. Components read state through getters and never write directly to service internals. All `invoke()` calls are placed exclusively in services (never inside components).
 
-Current stores:
-- `navigationStore` — active route (`'dashboard' | 'proxies' | 'settings'`)
-- `proxyStore` — proxy list + `isAddSheetOpen` flag; `openAddSheet()` / `closeAddSheet()` / `addProxy()` / `removeProxy()` / `updateProxy()`
-- `connectionStore` — tunnel status, active proxy, IP, speeds; `connect(proxyId)` / `disconnect()`
-- `settingsStore` — persists to `localStorage` under key `whirm-settings`; exposes `draft`, `update(patch)`, `save()`, `reset()`. Settings fields: `globalTimeout` (default 5000 ms), `dnsLeakProtection` (boolean), `proxyProtocol` (default `'SOCKS5'`)
+Current services:
+- `proxyService` (`proxy.service.svelte.ts`) — proxy list + `isAddSheetOpen` flag; `getProxies()` / `add()` / `remove()` / `update()` / `test()` / `openAddSheet()` / `closeAddSheet()`
+- `connectionService` (`connection.service.svelte.ts`) — tunnel status, active proxy, IP, speeds; `connect(proxyId)` / `disconnect()`
+- `settingsService` (`settings.service.svelte.ts`) — persists to SQLite via Tauri; exposes `draft`, `update(patch)`, `save()`, `reset()`. Settings fields: `globalTimeout` (default 5000 ms), `dnsLeakProtection` (boolean), `proxyProtocol` (default `'SOCKS5'`)
+- `sessionService` (`session.service.ts`) — stateless; `open()` / `close()` / `getAll()` for connection session history
+
+Navigation remains in `src/lib/stores/navigation.svelte.ts` (only store left).
+
+### Database (SeaORM + SQLite)
+The backend uses **SeaORM 2.0-rc** with SQLite. The database file (`whirm.db`) is created in the Tauri app data directory. Migrations run automatically on startup via `db::init()`.
+
+- **Entities** live in `src-tauri/src/db/entities/` — `proxy`, `settings`, `connection_session`, plus enums in `entities/enums/proxy.rs`
+- **Migrations** live in `src-tauri/src/db/migrations/` — named `m20240101_NNNNNN_description.rs`, registered in `migrations/mod.rs`
+- A default settings row is seeded on first run if none exists
+- Entity models derive `Serialize` with `#[serde(rename_all = "camelCase")]` so field names match TypeScript types over the Tauri bridge
+
+When adding a new table: create a migration file, register it in `migrations/mod.rs`, create an entity module, and register it in `entities/mod.rs`.
 
 ### Tauri integration
-The Rust backend lives in `src-tauri/`. Frontend-to-Rust calls use `invoke()` from `@tauri-apps/api/core`. By convention, all `invoke()` calls are placed exclusively in store methods (never inside components).
+The Rust backend lives in `src-tauri/`. Frontend-to-Rust calls use `invoke()` from `@tauri-apps/api/core`.
 
-Three Tauri commands are defined in `src-tauri/src/lib.rs`:
-- **`connect_proxy`** — tests connectivity via `api.ipify.org` first (no system change yet), then saves the current system proxy and applies the new one; returns the current public IP. Parameters: `host`, `port`, `protocol` (`SOCKS5`|`HTTP`|`HTTPS`), optional `username`/`password`.
-- **`disconnect_proxy`** — restores the saved system proxy; no-op if no proxy was saved in this session.
-- **`test_proxy`** — same signature as `connect_proxy` but only measures latency without saving/restoring; returns milliseconds.
+Tauri commands in `src-tauri/src/lib.rs`:
+- **Proxy tunnel**: `connect_proxy`, `disconnect_proxy`, `test_proxy`
+- **Proxy CRUD**: `get_proxies`, `add_proxy`, `update_proxy`, `delete_proxy`
+- **Settings**: `get_settings`, `save_settings`
+- **Sessions**: `open_session`, `close_session`, `get_sessions`
 
-`AppState` (held via Tauri's managed state) stores `saved_proxy: Mutex<Option<Sysproxy>>` to enable restoration on disconnect. The app registers an `on_window_event` handler that automatically restores the system proxy on close/crash — this prevents users from being left with stale proxy settings if the app exits unexpectedly. Error messages from the Rust backend are in English. Key Rust deps: `sysproxy` (system proxy reads/writes), `reqwest` with SOCKS5 support (connectivity test).
+Commands that accept structured input use dedicated `*Input` structs with `#[serde(rename_all = "camelCase")]`. On the frontend, pass inputs as `{ input: { ... } }` to match Tauri's argument naming.
 
-Always use typed generics on `invoke()` calls: `invoke<string>(...)`, `invoke<number>(...)`, etc. All `invoke()` calls belong in store methods only, never in components.
+`AppState` (Tauri managed state) holds: `saved_proxy: Mutex<Option<Sysproxy>>`, `db: DatabaseConnection`, `active_session_id: Mutex<Option<String>>`, `active_proxy_id: Mutex<Option<String>>`. The exit handler restores the original system proxy and closes the active session on app exit — this prevents stale proxy settings if the app crashes.
+
+Always use typed generics on `invoke()` calls: `invoke<string>(...)`, `invoke<number>(...)`, etc.
+
+Key Rust deps: `sysproxy` (system proxy reads/writes), `reqwest` with SOCKS5 support (connectivity test), `sea-orm` + `sea-orm-migration` (database), `chrono` (timestamps), `uuid` (primary keys).
 
 ### Component structure
 - `src/lib/components/layout/` — `Sidebar` and `TopAppBar` are shared across all three pages
@@ -76,8 +93,9 @@ Core types live in `src/lib/types/index.ts`:
 - `ProxyProtocol` — `'SOCKS5' | 'HTTP' | 'HTTPS'`
 - `ProxyStatus` — `'active' | 'inactive' | 'error'`
 - `ConnectionStatus` — `'connected' | 'disconnected' | 'connecting'`
-- `Proxy` — main entity: `id`, `name`, `host`, `port`, `protocol`, `country`, `countryCode`, optional `speed`, `username`, `password`, `status`, `category`, `lastUsed`
+- `Proxy` — main entity: `id`, `name`, `host`, `port`, `protocol`, `country`, `countryCode`, `status`, optional `username`, `password`, `category`, `lastUsedAt`
 - `ConnectionState` — `status`, `activeProxy`, `currentIp`, `downloadSpeed`, `uploadSpeed`
+- `ConnectionSession` — `id`, `proxyId`, `connectedAt`, `disconnectedAt`, `ipAddress`
 
 ### Svelte 5 patterns
 This codebase uses Svelte 5 runes exclusively:
