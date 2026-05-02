@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Search, Plus, RotateCw, Bell } from '@lucide/svelte';
   import { navigation } from '$lib/stores/navigation.svelte';
-  import { proxyStore } from '$lib/stores/proxy.svelte';
+  import { proxyService } from '$lib/services/proxy.service.svelte';
   import { toast } from 'svelte-sonner';
 
   interface Props {
@@ -15,7 +15,7 @@
 
   function handleAdd() {
     navigation.navigate('proxies');
-    proxyStore.openAddSheet();
+    proxyService.openAddSheet();
   }
 
   function handleRefresh() {
