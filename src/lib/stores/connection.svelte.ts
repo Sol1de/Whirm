@@ -21,7 +21,7 @@ function createConnectionStore() {
 
       const proxy = proxyStore.proxies.find((p: Proxy) => p.id === proxyId);
       if (!proxy) {
-        throw new Error(`Proxy introuvable (id: ${proxyId})`);
+        throw new Error(`Proxy not found (id: ${proxyId})`);
       }
 
       state = { ...state, status: 'connecting' };
@@ -44,7 +44,7 @@ function createConnectionStore() {
         };
         proxyStore.updateProxy(proxy.id, { lastUsed: new Date() });
       } catch (error) {
-        console.error('Échec de la connexion au proxy :', error);
+        console.error('Failed to connect to proxy:', error);
         state = {
           status: 'disconnected',
           activeProxy: null,
@@ -63,7 +63,7 @@ function createConnectionStore() {
       try {
         await invoke('disconnect_proxy');
       } catch (error) {
-        console.error('Échec de la déconnexion :', error);
+        console.error('Failed to disconnect:', error);
         invokeError = error;
       }
       state = {
