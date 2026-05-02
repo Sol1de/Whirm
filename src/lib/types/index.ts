@@ -13,7 +13,6 @@ export interface Proxy {
   country: string;
   countryCode: string;
   username?: string;
-  password?: string;
   status: ProxyStatus;
   category?: string;
   lastUsedAt?: string;

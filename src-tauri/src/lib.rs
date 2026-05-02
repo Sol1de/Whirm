@@ -261,10 +261,12 @@ async fn add_proxy(
         updated_at: Set(now),
     };
 
-    new_proxy
+    let mut result = new_proxy
         .insert(&state.db)
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    result.password = None;
+    Ok(result)
 }
 
 #[tauri::command]
@@ -299,7 +301,9 @@ async fn update_proxy(
         ..Default::default()
     };
 
-    updated_proxy.update(&state.db).await.map_err(|e| e.to_string())
+    let mut result = updated_proxy.update(&state.db).await.map_err(|e| e.to_string())?;
+    result.password = None;
+    Ok(result)
 }
 
 #[tauri::command]
