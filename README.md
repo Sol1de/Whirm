@@ -33,8 +33,9 @@ pnpm tauri dev
 
 | Commande | Description |
 |---|---|
-| `pnpm dev` | Serveur de développement frontend (HMR) |
+| `pnpm dev` | Serveur de développement frontend (HMR, port 5173) |
 | `pnpm build` | Build de production frontend |
+| `pnpm preview` | Prévisualiser le build de production |
 | `pnpm check` | Vérification TypeScript + Svelte |
 | `pnpm tauri dev` | App desktop en développement |
 | `pnpm tauri build` | Bundle desktop (macOS / Windows / Linux) |
@@ -57,6 +58,20 @@ src/
         └── settings/       # Formulaire paramètres connexion
 src-tauri/                  # Backend Rust (Tauri 2)
 ```
+
+## Backend Rust
+
+Trois commandes Tauri exposées au frontend via `invoke()` :
+
+| Commande | Rôle |
+|---|---|
+| `connect_proxy` | Vérifie la connectivité, sauvegarde le proxy système actuel, applique le nouveau ; retourne l'IP publique |
+| `disconnect_proxy` | Restaure le proxy système sauvegardé (no-op si aucun proxy actif) |
+| `test_proxy` | Mesure la latence sans toucher au système ; retourne les millisecondes |
+
+À la fermeture de l'app (même en cas de crash), le proxy système est automatiquement restauré pour éviter qu'un utilisateur reste bloqué avec un proxy orphelin.
+
+---
 
 ## Ajouter un composant UI
 
