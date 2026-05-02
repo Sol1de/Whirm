@@ -2,17 +2,25 @@
   import TopAppBar from "$lib/components/layout/TopAppBar.svelte";
   import ConnectionSettings from "$lib/components/settings/ConnectionSettings.svelte";
   import SettingsFooter from "$lib/components/settings/SettingsFooter.svelte";
-  import { settingsStore } from "$lib/stores/settings.svelte";
+  import { settingsService } from "$lib/services/settings.service.svelte";
   import { toast } from "svelte-sonner";
 
-  function handleSave() {
-    settingsStore.save();
-    toast.success("Settings saved");
+  async function handleSave() {
+    try {
+      await settingsService.save();
+      toast.success("Settings saved");
+    } catch {
+      toast.error("Failed to save settings");
+    }
   }
 
-  function handleReset() {
-    settingsStore.reset();
-    toast.info("Settings reset to defaults");
+  async function handleReset() {
+    try {
+      await settingsService.reset();
+      toast.info("Settings reset to defaults");
+    } catch {
+      toast.error("Failed to reset settings");
+    }
   }
 </script>
 

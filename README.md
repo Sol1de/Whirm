@@ -49,27 +49,41 @@ src/
 ├── App.svelte              # Shell principal + routing
 └── lib/
     ├── types/              # Interfaces TypeScript partagées
-    ├── stores/             # État global (navigation, proxies, connexion)
+    ├── stores/             # Navigation uniquement
+    ├── services/           # État + logique métier (proxies, connexion, settings, sessions)
     ├── pages/              # Dashboard · Proxies · Settings
     └── components/
         ├── layout/         # Sidebar et TopAppBar (partagés)
         ├── dashboard/      # Cartes status, stats, table récente
         ├── proxies/        # Table, filtres, panel "Add Proxy"
         └── settings/       # Formulaire paramètres connexion
-src-tauri/                  # Backend Rust (Tauri 2)
+src-tauri/
+├── src/
+│   ├── lib.rs              # Commandes Tauri + AppState
+│   └── db/
+│       ├── mod.rs           # Init DB + seed
+│       ├── entities/        # Modèles SeaORM (proxy, settings, connection_session)
+│       └── migrations/      # Migrations SQLite
 ```
 
 ## Backend Rust
 
-Trois commandes Tauri exposées au frontend via `invoke()` :
+### Base de données
 
-| Commande | Rôle |
-|---|---|
-| `connect_proxy` | Vérifie la connectivité, sauvegarde le proxy système actuel, applique le nouveau ; retourne l'IP publique |
-| `disconnect_proxy` | Restaure le proxy système sauvegardé (no-op si aucun proxy actif) |
-| `test_proxy` | Mesure la latence sans toucher au système ; retourne les millisecondes |
+SQLite via **SeaORM 2.0-rc**. Le fichier `whirm.db` est créé automatiquement dans le répertoire de données de l'app. Les migrations s'exécutent au démarrage ; une ligne de settings par défaut est insérée au premier lancement.
 
-À la fermeture de l'app (même en cas de crash), le proxy système est automatiquement restauré pour éviter qu'un utilisateur reste bloqué avec un proxy orphelin.
+### Commandes Tauri
+
+Exposées au frontend via `invoke()` :
+
+| Catégorie | Commandes | Rôle |
+|---|---|---|
+| **Tunnel** | `connect_proxy`, `disconnect_proxy`, `test_proxy` | Connectivité proxy, sauvegarde/restauration du proxy système, mesure de latence |
+| **CRUD Proxies** | `get_proxies`, `add_proxy`, `update_proxy`, `delete_proxy` | Gestion persistante des proxies en base |
+| **Settings** | `get_settings`, `save_settings` | Lecture/écriture des paramètres globaux |
+| **Sessions** | `open_session`, `close_session`, `get_sessions` | Historique des connexions |
+
+À la fermeture de l'app (même en cas de crash), le proxy système est automatiquement restauré et la session active est fermée.
 
 ---
 

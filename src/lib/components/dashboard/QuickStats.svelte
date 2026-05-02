@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { connectionStore } from '$lib/stores/connection.svelte';
+  import { connectionService } from '$lib/services/connection.service.svelte';
   import StatCard from './StatCard.svelte';
   import { Globe, Activity, Server } from '@lucide/svelte';
 
-  let state = $derived(connectionStore.state);
+  let state = $derived(connectionService.state);
 
   let throughputValue = $derived(
     state.downloadSpeed > 0 || state.uploadSpeed > 0

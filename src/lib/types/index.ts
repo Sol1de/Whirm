@@ -12,12 +12,11 @@ export interface Proxy {
   protocol: ProxyProtocol;
   country: string;
   countryCode: string;
-  speed?: number;
   username?: string;
   password?: string;
   status: ProxyStatus;
   category?: string;
-  lastUsed?: Date;
+  lastUsedAt?: string;
 }
 
 export interface ConnectionState {
@@ -26,4 +25,12 @@ export interface ConnectionState {
   currentIp: string | null;
   downloadSpeed: number;
   uploadSpeed: number;
+}
+
+export interface ConnectionSession {
+  id: string;
+  proxyId: string | null;
+  connectedAt: string;
+  disconnectedAt: string | null;
+  ipAddress: string | null;
 }

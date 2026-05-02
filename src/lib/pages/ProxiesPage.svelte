@@ -3,7 +3,7 @@
   import ProxyFiltersBar from '$lib/components/proxies/ProxyFiltersBar.svelte';
   import ProxyTable from '$lib/components/proxies/ProxyTable.svelte';
   import AddProxySheet from '$lib/components/proxies/AddProxySheet.svelte';
-  import { proxyStore } from '$lib/stores/proxy.svelte';
+  import { proxyService } from '$lib/services/proxy.service.svelte';
 </script>
 
 <TopAppBar title="Proxies" searchPlaceholder="Search saved proxies..." />
@@ -13,4 +13,4 @@
   <ProxyTable />
 </main>
 
-<AddProxySheet open={proxyStore.isAddSheetOpen} onClose={proxyStore.closeAddSheet} />
+<AddProxySheet open={proxyService.isAddSheetOpen} onClose={proxyService.closeAddSheet} />

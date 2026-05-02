@@ -2,7 +2,7 @@
   import { Network } from "@lucide/svelte";
   import { Switch } from "$lib/components/ui/switch";
   import * as Select from "$lib/components/ui/select";
-  import { settingsStore } from "$lib/stores/settings.svelte";
+  import { settingsService } from "$lib/services/settings.service.svelte";
 </script>
 
 <section class="rounded-[2px] border border-zinc-800 bg-zinc-900">
@@ -28,9 +28,9 @@
       </div>
       <input
         type="number"
-        value={settingsStore.draft.globalTimeout}
+        value={settingsService.draft.globalTimeout}
         oninput={(e) =>
-          settingsStore.update({
+          settingsService.update({
             globalTimeout:
               parseInt((e.target as HTMLInputElement).value, 10) || 0,
           })}
@@ -49,8 +49,8 @@
         </p>
       </div>
       <Switch
-        checked={settingsStore.draft.dnsLeakProtection}
-        onCheckedChange={(v) => settingsStore.update({ dnsLeakProtection: v })}
+        checked={settingsService.draft.dnsLeakProtection}
+        onCheckedChange={(v) => settingsService.update({ dnsLeakProtection: v })}
       />
     </div>
 
@@ -66,19 +66,19 @@
       </div>
       <Select.Root
         type="single"
-        value={settingsStore.draft.proxyProtocol}
+        value={settingsService.draft.proxyProtocol}
         onValueChange={(v) =>
           v &&
-          settingsStore.update({
+          settingsService.update({
             proxyProtocol: v as "SOCKS5" | "HTTP" | "HTTPS",
           })}
       >
         <Select.Trigger
           class="w-48 rounded-[2px] border-zinc-800 bg-[#09090b] text-sm text-white"
         >
-          {settingsStore.draft.proxyProtocol === "SOCKS5"
+          {settingsService.draft.proxyProtocol === "SOCKS5"
             ? "SOCKS5"
-            : settingsStore.draft.proxyProtocol}
+            : settingsService.draft.proxyProtocol}
         </Select.Trigger>
         <Select.Content class="rounded-[2px] border-zinc-800 bg-zinc-900">
           <Select.Item value="SOCKS5" class="text-sm text-white"

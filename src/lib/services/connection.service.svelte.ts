@@ -1,15 +1,18 @@
 import { invoke } from '@tauri-apps/api/core';
 import type { ConnectionState, Proxy } from '$lib/types';
-import { proxyStore } from '$lib/stores/proxy.svelte';
+import { proxyService } from '$lib/services/proxy.service.svelte';
+import { sessionService } from '$lib/services/session.service';
 
-function createConnectionStore() {
+function createConnectionService() {
   let state = $state<ConnectionState>({
     status: 'disconnected',
     activeProxy: null,
     currentIp: null,
     downloadSpeed: 0,
-    uploadSpeed: 0
+    uploadSpeed: 0,
   });
+
+  let sessionId = $state<string | null>(null);
 
   return {
     get state() {
@@ -19,38 +22,37 @@ function createConnectionStore() {
     async connect(proxyId: string) {
       if (state.status === 'connecting' || state.status === 'connected') return;
 
-      const proxy = proxyStore.proxies.find((p: Proxy) => p.id === proxyId);
-      if (!proxy) {
-        throw new Error(`Proxy not found (id: ${proxyId})`);
-      }
+      const proxy = proxyService.proxies.find((p: Proxy) => p.id === proxyId);
+      if (!proxy) throw new Error(`Proxy not found (id: ${proxyId})`);
 
       state = { ...state, status: 'connecting' };
 
       try {
         const ip = await invoke<string>('connect_proxy', {
-          host: proxy.host,
-          port: proxy.port,
-          protocol: proxy.protocol,
-          username: proxy.username ?? null,
-          password: proxy.password ?? null
+          proxyId: proxy.id,
         });
+
+        try {
+          sessionId = await sessionService.open(proxy.id, ip);
+        } catch (sessionError) {
+          await invoke('disconnect_proxy').catch(() => {});
+          throw sessionError;
+        }
 
         state = {
           status: 'connected',
           activeProxy: proxy,
           currentIp: ip,
           downloadSpeed: 0,
-          uploadSpeed: 0
+          uploadSpeed: 0,
         };
-        proxyStore.updateProxy(proxy.id, { lastUsed: new Date() });
       } catch (error) {
-        console.error('Failed to connect to proxy:', error);
         state = {
           status: 'disconnected',
           activeProxy: null,
           currentIp: null,
           downloadSpeed: 0,
-          uploadSpeed: 0
+          uploadSpeed: 0,
         };
         throw error;
       }
@@ -59,6 +61,15 @@ function createConnectionStore() {
     async disconnect() {
       if (state.status === 'disconnected') return;
 
+      if (sessionId !== null) {
+        try {
+          await sessionService.close(sessionId);
+        } catch (error) {
+          console.error('Failed to close session:', error);
+        }
+        sessionId = null;
+      }
+
       let invokeError: unknown = null;
       try {
         await invoke('disconnect_proxy');
@@ -66,16 +77,18 @@ function createConnectionStore() {
         console.error('Failed to disconnect:', error);
         invokeError = error;
       }
+
       state = {
         status: 'disconnected',
         activeProxy: null,
         currentIp: null,
         downloadSpeed: 0,
-        uploadSpeed: 0
+        uploadSpeed: 0,
       };
+
       if (invokeError) throw invokeError;
-    }
+    },
   };
 }
 
-export const connectionStore = createConnectionStore();
+export const connectionService = createConnectionService();

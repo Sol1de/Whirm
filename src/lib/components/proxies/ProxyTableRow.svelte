@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Proxy } from '$lib/types';
   import { Plug2, Pencil, Trash2 } from '@lucide/svelte';
-  import { proxyStore } from '$lib/stores/proxy.svelte';
-  import { connectionStore } from '$lib/stores/connection.svelte';
+  import { proxyService } from '$lib/services/proxy.service.svelte';
+  import { connectionService } from '$lib/services/connection.service.svelte';
   import { toast } from 'svelte-sonner';
 
   interface Props {
@@ -20,19 +20,27 @@
       .join('');
   }
 
-  let isActive = $derived(connectionStore.state.activeProxy?.id === proxy.id);
-  let isConnecting = $derived(connectionStore.state.status === 'connecting');
+  let isActive = $derived(connectionService.state.activeProxy?.id === proxy.id);
+  let isConnecting = $derived(connectionService.state.status === 'connecting');
+
+  async function handleDelete() {
+    try {
+      await proxyService.remove(proxy.id);
+    } catch (error) {
+      toast.error(`Failed to delete proxy: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 
   async function handleConnect() {
     if (isActive) {
       try {
-        await connectionStore.disconnect();
+        await connectionService.disconnect();
       } catch (error) {
         toast.error(`Disconnect failed: ${error instanceof Error ? error.message : String(error)}`);
       }
     } else {
       try {
-        await connectionStore.connect(proxy.id);
+        await connectionService.connect(proxy.id);
         toast.success(`Connected to ${proxy.name}`);
       } catch (error) {
         toast.error(`Failed to connect to ${proxy.name}: ${error instanceof Error ? error.message : String(error)}`);
@@ -74,9 +82,7 @@
 
   <!-- Latency -->
   <td class="px-6 py-[22.5px]">
-    <span class="text-sm text-zinc-400">
-      {proxy.speed != null ? `${proxy.speed}ms` : '—'}
-    </span>
+    <span class="text-sm text-zinc-400">—</span>
   </td>
 
   <!-- Actions -->
@@ -98,7 +104,7 @@
       <button
         class="text-zinc-500 transition-colors hover:text-red-400"
         title="Delete"
-        onclick={() => proxyStore.removeProxy(proxy.id)}
+        onclick={handleDelete}
       >
         <Trash2 class="h-4 w-4" />
       </button>

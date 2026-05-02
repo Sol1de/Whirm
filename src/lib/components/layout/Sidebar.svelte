@@ -1,7 +1,6 @@
 <script lang="ts">
   import { navigation } from '$lib/stores/navigation.svelte';
-  import { connectionStore } from '$lib/stores/connection.svelte';
-  import { proxyStore } from '$lib/stores/proxy.svelte';
+  import { connectionService } from '$lib/services/connection.service.svelte';
   import type { Route } from '$lib/types';
   import { LayoutDashboard, Globe, Settings2 } from '@lucide/svelte';
   import type { Component } from 'svelte';
@@ -46,10 +45,10 @@
   <div class="border-t border-zinc-800 px-6 py-4">
     <div class="flex items-center gap-3">
       <span
-        class="h-2 w-2 shrink-0 rounded-full {statusDot[connectionStore.state.status] ??
+        class="h-2 w-2 shrink-0 rounded-full {statusDot[connectionService.state.status] ??
           'bg-zinc-500'}"
       ></span>
-      <span class="text-sm capitalize text-zinc-400">{connectionStore.state.status}</span>
+      <span class="text-sm capitalize text-zinc-400">{connectionService.state.status}</span>
     </div>
   </div>
 </aside>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as Sheet from "$lib/components/ui/sheet";
   import { Input } from "$lib/components/ui/input";
-  import { proxyStore } from "$lib/stores/proxy.svelte";
+  import { proxyService } from "$lib/services/proxy.service.svelte";
   import type { ProxyProtocol } from "$lib/types";
   import { X, Info } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
@@ -32,7 +32,7 @@
 
   const protocols: ProxyProtocol[] = ["HTTPS", "SOCKS5", "HTTP"];
 
-  function handleSave() {
+  async function handleSave() {
     if (!proxyName.trim() || !host.trim() || !port.trim()) {
       toast.error("Please fill in all required fields (name, host, port)");
       return;
@@ -42,21 +42,23 @@
       toast.error("Port must be a number between 1 and 65535");
       return;
     }
-    proxyStore.addProxy({
-      id: crypto.randomUUID(),
-      name: proxyName.trim(),
-      host: host.trim(),
-      port: portNum,
-      protocol,
-      country: "",
-      countryCode: "",
-      status: "inactive",
-      username: username.trim() || undefined,
-      password: password.trim() || undefined,
-    });
-    toast.success("Proxy added");
-    resetForm();
-    onClose();
+    try {
+      await proxyService.add({
+        name: proxyName.trim(),
+        host: host.trim(),
+        port: portNum,
+        protocol,
+        country: "",
+        countryCode: "",
+        username: username.trim() || undefined,
+        password: password.trim() || undefined,
+      });
+      toast.success("Proxy added");
+      resetForm();
+      onClose();
+    } catch (error) {
+      toast.error(`Failed to save proxy: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   async function handleTest() {
@@ -74,7 +76,7 @@
     toast.info("Testing connection…");
 
     try {
-      const latency = await proxyStore.testProxy(
+      const latency = await proxyService.test(
         host.trim(),
         portNum,
         protocol,

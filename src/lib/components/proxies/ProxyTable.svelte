@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { proxyStore } from "$lib/stores/proxy.svelte";
+  import { proxyService } from "$lib/services/proxy.service.svelte";
   import ProxyTableRow from "./ProxyTableRow.svelte";
   import { Network, Plus } from "@lucide/svelte";
 </script>
@@ -23,7 +23,7 @@
 
     <!-- Body -->
     <tbody>
-      {#each proxyStore.proxies as proxy (proxy.id)}
+      {#each proxyService.proxies as proxy (proxy.id)}
         <ProxyTableRow {proxy} />
       {:else}
         <tr>
@@ -38,7 +38,7 @@
               </p>
               <button
                 class="mt-4 rounded-[2px] bg-white px-4 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90"
-                onclick={proxyStore.openAddSheet}
+                onclick={proxyService.openAddSheet}
               >
                 Add Proxy
               </button>

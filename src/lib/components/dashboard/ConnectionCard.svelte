@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { connectionStore } from "$lib/stores/connection.svelte";
-  import { proxyStore } from "$lib/stores/proxy.svelte";
+  import { connectionService } from "$lib/services/connection.service.svelte";
+  import { proxyService } from "$lib/services/proxy.service.svelte";
   import { toast } from "svelte-sonner";
   import { CodeXml } from "@lucide/svelte";
 
@@ -29,13 +29,13 @@
   };
 
   let config = $derived(
-    statusConfig[connectionStore.state.status] ?? statusConfig.disconnected,
+    statusConfig[connectionService.state.status] ?? statusConfig.disconnected,
   );
-  let isConnected = $derived(connectionStore.state.status === "connected");
-  let isConnecting = $derived(connectionStore.state.status === "connecting");
+  let isConnected = $derived(connectionService.state.status === "connected");
+  let isConnecting = $derived(connectionService.state.status === "connecting");
 
   let targetProxy = $derived(
-    connectionStore.state.activeProxy ?? proxyStore.proxies[0] ?? null,
+    connectionService.state.activeProxy ?? proxyService.proxies[0] ?? null,
   );
 
   let isDisabled = $derived(
@@ -47,13 +47,13 @@
   async function handleToggle() {
     if (isConnected) {
       try {
-        await connectionStore.disconnect();
+        await connectionService.disconnect();
       } catch (error) {
         toast.error(`Disconnect failed: ${error instanceof Error ? error.message : String(error)}`);
       }
     } else if (targetProxy) {
       try {
-        await connectionStore.connect(targetProxy.id);
+        await connectionService.connect(targetProxy.id);
       } catch (error) {
         toast.error(`Connection failed: ${error instanceof Error ? error.message : String(error)}`);
       }

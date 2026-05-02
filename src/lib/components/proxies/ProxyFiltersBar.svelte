@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { proxyStore } from '$lib/stores/proxy.svelte';
+  import { proxyService } from '$lib/services/proxy.service.svelte';
   import * as Select from '$lib/components/ui/select';
   import { Plus } from '@lucide/svelte';
 
@@ -56,7 +56,7 @@
   <!-- Add Proxy button -->
   <button
     class="flex items-center gap-2 rounded-[2px] bg-white px-4 py-2 font-bold text-[#09090b] transition-opacity hover:opacity-90"
-    onclick={proxyStore.openAddSheet}
+    onclick={proxyService.openAddSheet}
   >
     <Plus class="h-4 w-4" />
     Add Proxy

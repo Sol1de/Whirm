@@ -1,15 +1,20 @@
 <script lang="ts">
-  import { proxyStore } from '$lib/stores/proxy.svelte';
+  import { proxyService } from '$lib/services/proxy.service.svelte';
   import { navigation } from '$lib/stores/navigation.svelte';
-  import { connectionStore } from '$lib/stores/connection.svelte';
+  import { connectionService } from '$lib/services/connection.service.svelte';
   import { toast } from 'svelte-sonner';
 
-  let recentProxies = $derived(proxyStore.proxies.slice(0, 5));
-  let isConnecting = $derived(connectionStore.state.status === 'connecting');
+  let recentProxies = $derived(
+    [...proxyService.proxies]
+      .filter((p) => p.lastUsedAt != null)
+      .sort((a, b) => new Date(b.lastUsedAt!).getTime() - new Date(a.lastUsedAt!).getTime())
+      .slice(0, 5)
+  );
+  let isConnecting = $derived(connectionService.state.status === 'connecting');
 
   async function handleConnect(proxyId: string) {
     try {
-      await connectionStore.connect(proxyId);
+      await connectionService.connect(proxyId);
     } catch (err: unknown) {
       toast.error(`Connection failed: ${err instanceof Error ? err.message : String(err)}`);
     }
