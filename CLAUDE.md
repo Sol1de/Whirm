@@ -64,6 +64,10 @@ Always use typed generics on `invoke()` calls: `invoke<string>(...)`, `invoke<nu
 
 Key Rust deps: `sysproxy` (system proxy reads/writes), `reqwest` with SOCKS5 support (connectivity test), `sea-orm` + `sea-orm-migration` (database), `chrono` (timestamps), `uuid` (primary keys).
 
+**Password encryption**: proxy passwords are encrypted at rest via AES-256-GCM with a machine-specific key derived using HKDF-SHA256 (`machine-uid` crate, salt `"whirm-field-v1"`). Implementation in `src-tauri/src/crypto.rs`. `add_proxy`/`update_proxy` encrypt before DB write; `connect_proxy` decrypts before use. Never compare or forward the raw DB `password` field — it is ciphertext.
+
+**System proxy bypass**: `connect_proxy` hardcodes bypass list `"localhost,127.0.0.1,<local>"` — not currently user-configurable.
+
 ### Component structure
 - `src/lib/components/layout/` — `Sidebar` and `TopAppBar` are shared across all three pages
 - `src/lib/components/{dashboard,proxies,settings}/` — feature-specific components
@@ -96,6 +100,7 @@ Core types live in `src/lib/types/index.ts`:
 - `Proxy` — main entity: `id`, `name`, `host`, `port`, `protocol`, `country`, `countryCode`, `status`, optional `username`, `category`, `lastUsedAt`
 - `ConnectionState` — `status`, `activeProxy`, `currentIp`, `downloadSpeed`, `uploadSpeed`
 - `ConnectionSession` — `id`, `proxyId`, `connectedAt`, `disconnectedAt`, `ipAddress`
+- `Settings` — **not yet defined in this file**; fields used by `settingsService`: `globalTimeout: number`, `dnsLeakProtection: boolean`, `proxyProtocol: ProxyProtocol`
 
 ### Svelte 5 patterns
 This codebase uses Svelte 5 runes exclusively:
