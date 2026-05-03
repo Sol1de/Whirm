@@ -11,7 +11,14 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      $lib: path.resolve("./src/lib"),
+      "@components": path.resolve("./frontend/src/components"),
+      "@ui":         path.resolve("./frontend/src/components/ui"),
+      "@pages":      path.resolve("./frontend/src/pages"),
+      "@services":   path.resolve("./frontend/src/services"),
+      "@stores":     path.resolve("./frontend/src/stores"),
+      "@types":      path.resolve("./frontend/src/types"),
+      "@utils":      path.resolve("./frontend/src/utils"),
+      "@hooks":      path.resolve("./frontend/src/hooks"),
     },
   },
 })
