@@ -4,7 +4,6 @@ use chrono::Utc;
 use reqwest::Proxy;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait};
 use serde::Deserialize;
-use tauri::State;
 use urlencoding::encode as url_encode;
 
 use crate::crypto;
@@ -13,7 +12,7 @@ use crate::AppState;
 
 // ─── NETWORKING HELPERS ─────────────────────────────────────────────────────
 
-fn build_proxy_url(
+pub fn build_proxy_url(
     protocol: &str,
     host: &str,
     port: u16,
@@ -75,40 +74,36 @@ fn save_original_proxy(state: &AppState) -> Result<(), String> {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AddProxyInput {
-    name: String,
-    host: String,
-    port: i32,
-    protocol: ProxyProtocol,
-    country: String,
-    country_code: String,
-    username: Option<String>,
-    password: Option<String>,
-    category: Option<String>,
+    pub name: String,
+    pub host: String,
+    pub port: i32,
+    pub protocol: ProxyProtocol,
+    pub country: String,
+    pub country_code: String,
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub category: Option<String>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateProxyInput {
-    id: String,
-    name: String,
-    host: String,
-    port: i32,
-    protocol: ProxyProtocol,
-    country: String,
-    country_code: String,
-    username: Option<String>,
-    new_password: Option<String>,
-    status: ProxyStatus,
-    category: Option<String>,
+    pub id: String,
+    pub name: String,
+    pub host: String,
+    pub port: i32,
+    pub protocol: ProxyProtocol,
+    pub country: String,
+    pub country_code: String,
+    pub username: Option<String>,
+    pub new_password: Option<String>,
+    pub status: ProxyStatus,
+    pub category: Option<String>,
 }
 
 // ─── TUNNEL COMMANDS ────────────────────────────────────────────────────────
 
-#[tauri::command]
-pub async fn connect_proxy(
-    proxy_id: String,
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn connect_proxy(proxy_id: String, state: &AppState) -> Result<String, String> {
     let proxy = proxy::Entity::find_by_id(&proxy_id)
         .one(&state.db)
         .await
@@ -135,7 +130,7 @@ pub async fn connect_proxy(
     );
 
     let ip = check_connectivity(&proxy_url).await?;
-    save_original_proxy(&state)?;
+    save_original_proxy(state)?;
 
     let new_proxy = sysproxy::Sysproxy {
         enable: true,
@@ -152,8 +147,7 @@ pub async fn connect_proxy(
     Ok(ip)
 }
 
-#[tauri::command]
-pub async fn disconnect_proxy(state: State<'_, AppState>) -> Result<(), String> {
+pub async fn disconnect_proxy(state: &AppState) -> Result<(), String> {
     let saved = state
         .saved_proxy
         .lock()
@@ -171,7 +165,6 @@ pub async fn disconnect_proxy(state: State<'_, AppState>) -> Result<(), String> 
     Ok(())
 }
 
-#[tauri::command]
 pub async fn test_proxy(
     host: String,
     port: u16,
@@ -201,8 +194,7 @@ pub async fn test_proxy(
 
 // ─── CRUD COMMANDS ──────────────────────────────────────────────────────────
 
-#[tauri::command]
-pub async fn get_proxies(state: State<'_, AppState>) -> Result<Vec<proxy::Model>, String> {
+pub async fn get_proxies(state: &AppState) -> Result<Vec<proxy::Model>, String> {
     let proxies = proxy::Entity::find()
         .all(&state.db)
         .await
@@ -210,13 +202,13 @@ pub async fn get_proxies(state: State<'_, AppState>) -> Result<Vec<proxy::Model>
     Ok(proxies.into_iter().map(|mut p| { p.password = None; p }).collect())
 }
 
-#[tauri::command]
-pub async fn add_proxy(
-    input: AddProxyInput,
-    state: State<'_, AppState>,
-) -> Result<proxy::Model, String> {
+pub async fn add_proxy(input: AddProxyInput, state: &AppState) -> Result<proxy::Model, String> {
     if input.port < 1 || input.port > 65535 {
         return Err("Port must be between 1 and 65535".to_string());
+    }
+
+    if input.host.trim().is_empty() {
+        return Err("Host must not be empty".to_string());
     }
 
     let now = Utc::now();
@@ -251,13 +243,16 @@ pub async fn add_proxy(
     Ok(result)
 }
 
-#[tauri::command]
 pub async fn update_proxy(
     input: UpdateProxyInput,
-    state: State<'_, AppState>,
+    state: &AppState,
 ) -> Result<proxy::Model, String> {
     if input.port < 1 || input.port > 65535 {
         return Err("Port must be between 1 and 65535".to_string());
+    }
+
+    if input.host.trim().is_empty() {
+        return Err("Host must not be empty".to_string());
     }
 
     let updated_proxy = proxy::ActiveModel {
@@ -288,8 +283,7 @@ pub async fn update_proxy(
     Ok(result)
 }
 
-#[tauri::command]
-pub async fn delete_proxy(id: String, state: State<'_, AppState>) -> Result<(), String> {
+pub async fn delete_proxy(id: String, state: &AppState) -> Result<(), String> {
     {
         let active = state.active_proxy_id.lock().unwrap_or_else(|e| e.into_inner());
         if active.as_deref() == Some(id.as_str()) {

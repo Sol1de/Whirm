@@ -38,7 +38,7 @@ pub async fn init(app_handle: &tauri::AppHandle) -> Result<DatabaseConnection, S
     Ok(db)
 }
 
-async fn seed_settings(db: &DatabaseConnection) -> Result<(), String> {
+pub async fn seed_settings(db: &DatabaseConnection) -> Result<(), String> {
     let exists = settings::Entity::find()
         .one(db)
         .await
