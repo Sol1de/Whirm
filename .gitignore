@@ -14,7 +14,6 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
-!.vscode/extensions.json
 .idea
 .DS_Store
 *.suo
@@ -24,8 +23,8 @@ dist-ssr
 *.sw?
 
 # Tauri — Rust build artifacts (can be several GB)
-src-tauri/target/
-src-tauri/gen/
+desktop/target/
+desktop/gen/
 
 # Environment variables
 .env

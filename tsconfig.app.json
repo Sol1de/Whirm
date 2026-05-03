@@ -19,17 +19,26 @@
     "checkJs": true,
     "moduleDetection": "force",
     "paths": {
-      "$lib": [
-        "./src/lib"
-      ],
-      "$lib/*": [
-        "./src/lib/*"
-      ]
+      "@components": ["./frontend/src/components"],
+      "@components/*": ["./frontend/src/components/*"],
+      "@ui": ["./frontend/src/components/ui"],
+      "@ui/*": ["./frontend/src/components/ui/*"],
+      "@pages": ["./frontend/src/pages"],
+      "@pages/*": ["./frontend/src/pages/*"],
+      "@services": ["./frontend/src/services"],
+      "@services/*": ["./frontend/src/services/*"],
+      "@stores": ["./frontend/src/stores"],
+      "@stores/*": ["./frontend/src/stores/*"],
+      "@hooks": ["./frontend/src/hooks"],
+      "@hooks/*": ["./frontend/src/hooks/*"],
+      "@types": ["./frontend/src/types"],
+      "@types/*": ["./frontend/src/types/*"],
+      "@utils": ["./frontend/src/utils"]
     }
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
-    "src/**/*.svelte"
+    "frontend/**/*.ts",
+    "frontend/**/*.js",
+    "frontend/**/*.svelte"
   ]
 }

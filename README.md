@@ -1,96 +1,119 @@
 # Whirm
 
-Application desktop de gestion de proxies. Permet de configurer, organiser et basculer entre des proxies SOCKS5, HTTP et HTTPS depuis une interface unifiée.
+A desktop app for managing proxies without the headache. Add your SOCKS5, HTTP, or HTTPS proxies, switch between them in one click, and let Whirm handle the system-level wiring in the background.
 
-**Stack :** Svelte 5 · TypeScript · Tailwind CSS 4 · shadcn-svelte · Tauri 2 (Rust)
-
----
-
-## Prérequis
-
-- **Node.js** ≥ 18 + **pnpm** (`npm i -g pnpm`)
-- **Rust** ≥ 1.77.2 (`rustup` recommandé) — uniquement pour lancer l'app desktop
-- Dépendances système Tauri : [tauri.app/start/prerequisites](https://tauri.app/start/prerequisites/)
+Built with Svelte 5, TypeScript, Tailwind CSS 4, and Tauri 2 (Rust) under the hood.
 
 ---
 
-## Démarrage rapide
+## Getting started
+
+### Prerequisites
+
+- **Node.js ≥ 18** + **pnpm**
+- **Rust ≥ 1.85**
+- **Tauri system dependencies** for your OS quick list at [tauri.app/start/prerequisites](https://tauri.app/start/prerequisites/)
+
+### Quick start
 
 ```bash
-# Installer les dépendances
 pnpm install
 
-# Dev — frontend seul (navigateur, port 5173)
+# Frontend only
 pnpm dev
 
-# Dev — app desktop complète (Tauri + Rust + Vite)
+# Desktop app
 pnpm tauri dev
 ```
 
 ---
 
-## Commandes
+## Commands
 
-| Commande | Description |
+| Command | What it does |
 |---|---|
-| `pnpm dev` | Serveur de développement frontend (HMR, port 5173) |
-| `pnpm build` | Build de production frontend |
-| `pnpm preview` | Prévisualiser le build de production |
-| `pnpm check` | Vérification TypeScript + Svelte |
-| `pnpm tauri dev` | App desktop en développement |
-| `pnpm tauri build` | Bundle desktop (macOS / Windows / Linux) |
+| `pnpm dev` | Frontend dev server with HMR on port 5173 |
+| `pnpm build` | Production build of the frontend |
+| `pnpm preview` | Preview that production build locally |
+| `pnpm check` | TypeScript + Svelte type-check |
+| `pnpm tauri dev` | Desktop app in dev mode (Vite + Tauri window) |
+| `pnpm tauri build` | Bundle the app for distribution |
 
 ---
 
-## Structure du projet
+## Project structure
 
 ```
-src/
-├── App.svelte              # Shell principal + routing
-└── lib/
-    ├── types/              # Interfaces TypeScript partagées
-    ├── stores/             # Navigation uniquement
-    ├── services/           # État + logique métier (proxies, connexion, settings, sessions)
+frontend/                   # UI — Svelte 5 + TypeScript
+├── App.svelte              # Root shell + routing
+├── main.ts                 # Entry point
+├── app.css                 # Tailwind + theme tokens
+└── src/
+    ├── types/              # Shared TypeScript interfaces
+    ├── stores/             # Navigation store
+    ├── services/           # All state + business logic (proxies, connection, settings, sessions)
     ├── pages/              # Dashboard · Proxies · Settings
     └── components/
-        ├── layout/         # Sidebar et TopAppBar (partagés)
-        ├── dashboard/      # Cartes status, stats, table récente
-        ├── proxies/        # Table, filtres, panel "Add Proxy"
-        └── settings/       # Formulaire paramètres connexion
-src-tauri/
-├── src/
-│   ├── lib.rs              # Commandes Tauri + AppState
-│   └── db/
-│       ├── mod.rs           # Init DB + seed
-│       ├── entities/        # Modèles SeaORM (proxy, settings, connection_session)
-│       └── migrations/      # Migrations SQLite
+        ├── layout/         # Sidebar and TopAppBar
+        ├── dashboard/      # Status cards, stats, recent sessions
+        ├── proxies/        # Proxy table, filters, add panel
+        ├── settings/       # Settings form
+        └── ui/             # shadcn-svelte components — don't edit manually
+
+desktop/                    # Native layer — Rust + Tauri 2
+└── src/
+    ├── lib.rs              # App setup + global state
+    ├── crypto.rs           # AES-256-GCM password encryption
+    ├── commands/           # Tauri command handlers
+    └── db/
+        ├── mod.rs          # DB init + first-run seeding
+        ├── entities/       # SeaORM models
+        └── migrations/     # SQLite migrations
 ```
-
-## Backend Rust
-
-### Base de données
-
-SQLite via **SeaORM 2.0-rc**. Le fichier `whirm.db` est créé automatiquement dans le répertoire de données de l'app. Les migrations s'exécutent au démarrage ; une ligne de settings par défaut est insérée au premier lancement.
-
-### Commandes Tauri
-
-Exposées au frontend via `invoke()` :
-
-| Catégorie | Commandes | Rôle |
-|---|---|---|
-| **Tunnel** | `connect_proxy`, `disconnect_proxy`, `test_proxy` | Connectivité proxy, sauvegarde/restauration du proxy système, mesure de latence |
-| **CRUD Proxies** | `get_proxies`, `add_proxy`, `update_proxy`, `delete_proxy` | Gestion persistante des proxies en base |
-| **Settings** | `get_settings`, `save_settings` | Lecture/écriture des paramètres globaux |
-| **Sessions** | `open_session`, `close_session`, `get_sessions` | Historique des connexions |
-
-À la fermeture de l'app (même en cas de crash), le proxy système est automatiquement restauré et la session active est fermée.
 
 ---
 
-## Ajouter un composant UI
+## Import aliases
+
+Rather than relative paths everywhere, imports use semantic aliases configured in `vite.config.ts` and `tsconfig.json`:
+
+| Alias | Points to |
+|---|---|
+| `@components` | `frontend/src/components/` |
+| `@ui` | `frontend/src/components/ui/` |
+| `@pages` | `frontend/src/pages/` |
+| `@services` | `frontend/src/services/` |
+| `@stores` | `frontend/src/stores/` |
+| `@types` | `frontend/src/types/` |
+| `@utils` | `frontend/src/utils.ts` |
+
+---
+
+## Rust backend
+
+### Database
+
+The app uses **SeaORM 2.0-rc** on top of SQLite. The database file (`whirm.db`) is created automatically in the OS app data directory the first time you launch. Migrations run on startup, and a default settings row is seeded if none exists yet.
+
+### Tauri commands
+
+Everything the frontend needs from the native layer goes through `invoke()`:
+
+| Category | Commands |
+|---|---|
+| Proxy connection | `connect_proxy`, `disconnect_proxy`, `test_proxy` |
+| Proxy management | `get_proxies`, `add_proxy`, `update_proxy`, `delete_proxy` |
+| Settings | `get_settings`, `save_settings` |
+| Session history | `open_session`, `close_session`, `get_sessions` |
+
+When the app closes — even if it crashes — the original system proxy is restored and the active session is properly closed.
+
+---
+
+## Adding a UI component
 
 ```bash
-pnpm dlx shadcn-svelte@latest add <nom-composant>
+pnpm dlx shadcn-svelte@latest add <component-name>
 ```
 
-Les composants sont installés dans `src/lib/components/ui/` et ne doivent pas être modifiés manuellement.
+Components land in `frontend/src/components/ui/`. The project uses the **vega** style with neutral base color. Note: `toast` isn't in the vega registry, use `sonner` instead.

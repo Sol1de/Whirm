@@ -11,12 +11,21 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "$lib": [
-        "./src/lib"
-      ],
-      "$lib/*": [
-        "./src/lib/*"
-      ]
+      "@components": ["./frontend/src/components"],
+      "@components/*": ["./frontend/src/components/*"],
+      "@ui": ["./frontend/src/components/ui"],
+      "@ui/*": ["./frontend/src/components/ui/*"],
+      "@pages": ["./frontend/src/pages"],
+      "@pages/*": ["./frontend/src/pages/*"],
+      "@services": ["./frontend/src/services"],
+      "@services/*": ["./frontend/src/services/*"],
+      "@stores": ["./frontend/src/stores"],
+      "@stores/*": ["./frontend/src/stores/*"],
+      "@types": ["./frontend/src/types"],
+      "@types/*": ["./frontend/src/types/*"],
+      "@utils": ["./frontend/src/utils"],
+      "@hooks": ["./frontend/src/hooks"],
+      "@hooks/*": ["./frontend/src/hooks/*"],
     }
   }
 }
