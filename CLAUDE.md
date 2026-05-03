@@ -22,7 +22,7 @@ pnpm tauri dev    # Start full desktop app (launches Vite + Tauri window)
 pnpm tauri build  # Bundle desktop app for distribution
 ```
 
-There are no tests in this project yet.
+Integration tests live in `desktop/tests/` (crypto, db, proxy, session, settings). Run with `cargo test` from `desktop/`.
 
 ## Architecture
 

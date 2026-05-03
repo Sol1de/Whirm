@@ -1,6 +1,5 @@
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait};
 use serde::{Deserialize, Serialize};
-use tauri::State;
 
 use crate::db::entities::{settings, enums::proxy::ProxyProtocol};
 use crate::AppState;
@@ -8,14 +7,13 @@ use crate::AppState;
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettingsInput {
-    id: String,
-    global_timeout: i32,
-    dns_leak_protection: bool,
-    proxy_protocol: ProxyProtocol,
+    pub id: String,
+    pub global_timeout: i32,
+    pub dns_leak_protection: bool,
+    pub proxy_protocol: ProxyProtocol,
 }
 
-#[tauri::command]
-pub async fn get_settings(state: State<'_, AppState>) -> Result<settings::Model, String> {
+pub async fn get_settings(state: &AppState) -> Result<settings::Model, String> {
     settings::Entity::find()
         .one(&state.db)
         .await
@@ -23,11 +21,7 @@ pub async fn get_settings(state: State<'_, AppState>) -> Result<settings::Model,
         .ok_or_else(|| "Settings row not found".to_string())
 }
 
-#[tauri::command]
-pub async fn save_settings(
-    input: SettingsInput,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn save_settings(input: SettingsInput, state: &AppState) -> Result<(), String> {
     let row = settings::Entity::find()
         .one(&state.db)
         .await

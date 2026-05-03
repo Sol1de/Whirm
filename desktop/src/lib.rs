@@ -1,6 +1,6 @@
-mod commands;
-mod crypto;
-mod db;
+pub mod commands;
+pub mod crypto;
+pub mod db;
 
 use std::sync::Mutex;
 
@@ -8,9 +8,95 @@ use chrono::Utc;
 use db::entities::connection_session;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrait};
 use sysproxy::Sysproxy;
-use tauri::Manager;
+use tauri::{Manager, State};
 
-pub(crate) struct AppState {
+// ─── TAURI COMMAND ─────────────────────────────────────────────────
+
+#[tauri::command]
+async fn connect_proxy(proxy_id: String, state: State<'_, AppState>) -> Result<String, String> {
+    commands::proxy::connect_proxy(proxy_id, &state).await
+}
+
+#[tauri::command]
+async fn disconnect_proxy(state: State<'_, AppState>) -> Result<(), String> {
+    commands::proxy::disconnect_proxy(&state).await
+}
+
+#[tauri::command]
+async fn get_proxies(state: State<'_, AppState>) -> Result<Vec<db::entities::proxy::Model>, String> {
+    commands::proxy::get_proxies(&state).await
+}
+
+#[tauri::command]
+async fn add_proxy(
+    input: commands::proxy::AddProxyInput,
+    state: State<'_, AppState>,
+) -> Result<db::entities::proxy::Model, String> {
+    commands::proxy::add_proxy(input, &state).await
+}
+
+#[tauri::command]
+async fn update_proxy(
+    input: commands::proxy::UpdateProxyInput,
+    state: State<'_, AppState>,
+) -> Result<db::entities::proxy::Model, String> {
+    commands::proxy::update_proxy(input, &state).await
+}
+
+#[tauri::command]
+async fn delete_proxy(id: String, state: State<'_, AppState>) -> Result<(), String> {
+    commands::proxy::delete_proxy(id, &state).await
+}
+
+#[tauri::command]
+async fn test_proxy(
+    host: String,
+    port: u16,
+    protocol: String,
+    username: Option<String>,
+    password: Option<String>,
+) -> Result<u64, String> {
+    commands::proxy::test_proxy(host, port, protocol, username, password).await
+}
+
+#[tauri::command]
+async fn get_settings(
+    state: State<'_, AppState>,
+) -> Result<db::entities::settings::Model, String> {
+    commands::settings::get_settings(&state).await
+}
+
+#[tauri::command]
+async fn save_settings(
+    input: commands::settings::SettingsInput,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    commands::settings::save_settings(input, &state).await
+}
+
+#[tauri::command]
+async fn open_session(
+    proxy_id: String,
+    ip_address: String,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    commands::session::open_session(proxy_id, ip_address, &state).await
+}
+
+#[tauri::command]
+async fn close_session(session_id: String, state: State<'_, AppState>) -> Result<(), String> {
+    commands::session::close_session(session_id, &state).await
+}
+
+#[tauri::command]
+async fn get_sessions(
+    limit: Option<u64>,
+    state: State<'_, AppState>,
+) -> Result<Vec<db::entities::connection_session::Model>, String> {
+    commands::session::get_sessions(limit, &state).await
+}
+
+pub struct AppState {
     pub saved_proxy: Mutex<Option<Sysproxy>>,
     pub db: DatabaseConnection,
     pub active_session_id: Mutex<Option<String>>,
@@ -77,18 +163,18 @@ pub fn run() {
     tauri::Builder::default()
         .setup(setup_app)
         .invoke_handler(tauri::generate_handler![
-            commands::proxy::connect_proxy,
-            commands::proxy::disconnect_proxy,
-            commands::proxy::test_proxy,
-            commands::proxy::get_proxies,
-            commands::proxy::add_proxy,
-            commands::proxy::update_proxy,
-            commands::proxy::delete_proxy,
-            commands::settings::get_settings,
-            commands::settings::save_settings,
-            commands::session::open_session,
-            commands::session::close_session,
-            commands::session::get_sessions,
+            connect_proxy,
+            disconnect_proxy,
+            test_proxy,
+            get_proxies,
+            add_proxy,
+            update_proxy,
+            delete_proxy,
+            get_settings,
+            save_settings,
+            open_session,
+            close_session,
+            get_sessions,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
