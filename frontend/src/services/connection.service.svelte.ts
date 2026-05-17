@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { ConnectionState, Proxy } from '@types';
 import { proxyService } from '@services/proxy.service.svelte';
 import { sessionService } from '@services/session.service';
+import { notificationService } from '@services/notification.service.svelte';
 
 function createConnectionService() {
   let state = $state<ConnectionState>({
@@ -46,6 +47,7 @@ function createConnectionService() {
           downloadSpeed: 0,
           uploadSpeed: 0,
         };
+        notificationService.add('success', `Connected to ${proxy.name}`);
       } catch (error) {
         state = {
           status: 'disconnected',
@@ -54,6 +56,8 @@ function createConnectionService() {
           downloadSpeed: 0,
           uploadSpeed: 0,
         };
+        const msg = error instanceof Error ? error.message : String(error);
+        notificationService.add('error', `Connection failed: ${msg}`);
         throw error;
       }
     },
@@ -86,7 +90,13 @@ function createConnectionService() {
         uploadSpeed: 0,
       };
 
-      if (invokeError) throw invokeError;
+      if (invokeError) {
+        const msg = invokeError instanceof Error ? invokeError.message : String(invokeError);
+        notificationService.add('error', `Disconnect failed: ${msg}`);
+        throw invokeError;
+      } else {
+        notificationService.add('info', 'Disconnected from proxy');
+      }
     },
   };
 }

@@ -36,17 +36,17 @@ pub fn build_proxy_url(
     format!("{scheme}://{auth}{host}:{port}")
 }
 
-fn build_proxy_client(proxy_url: &str) -> Result<reqwest::Client, String> {
+fn build_proxy_client(proxy_url: &str, timeout_secs: u64) -> Result<reqwest::Client, String> {
     let proxy = Proxy::all(proxy_url).map_err(|e| format!("Invalid proxy URL: {e}"))?;
     reqwest::Client::builder()
         .proxy(proxy)
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(timeout_secs))
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {e}"))
 }
 
 async fn check_connectivity(proxy_url: &str) -> Result<String, String> {
-    let client = build_proxy_client(proxy_url)?;
+    let client = build_proxy_client(proxy_url, 10)?;
     let ip = client
         .get("https://api.ipify.org")
         .send()
@@ -171,6 +171,7 @@ pub async fn test_proxy(
     protocol: String,
     username: Option<String>,
     password: Option<String>,
+    timeout: Option<u64>,
 ) -> Result<u64, String> {
     let proxy_url = build_proxy_url(
         &protocol,
@@ -180,7 +181,8 @@ pub async fn test_proxy(
         password.as_deref(),
     );
 
-    let client = build_proxy_client(&proxy_url)?;
+    let timeout_secs = timeout.map(|ms| (ms / 1000).max(1)).unwrap_or(10);
+    let client = build_proxy_client(&proxy_url, timeout_secs)?;
     let start = Instant::now();
 
     client

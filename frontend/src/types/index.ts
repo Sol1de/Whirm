@@ -33,3 +33,11 @@ export interface ConnectionSession {
   disconnectedAt: string | null;
   ipAddress: string | null;
 }
+
+export interface AppNotification {
+  id: string;
+  type: 'info' | 'success' | 'error' | 'warning';
+  message: string;
+  timestamp: string;
+  read: boolean;
+}

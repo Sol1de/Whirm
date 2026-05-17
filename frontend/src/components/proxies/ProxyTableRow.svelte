@@ -82,7 +82,11 @@
 
   <!-- Latency -->
   <td class="px-6 py-[22.5px]">
-    <span class="text-sm text-zinc-400">—</span>
+    {#if proxyService.getLatency(proxy.id) !== undefined}
+      <span class="font-['Space_Grotesk',sans-serif] text-sm text-zinc-300">{proxyService.getLatency(proxy.id)}ms</span>
+    {:else}
+      <span class="text-sm text-zinc-400">—</span>
+    {/if}
   </td>
 
   <!-- Actions -->
@@ -98,7 +102,11 @@
       >
         <Plug2 class="h-4 w-4" />
       </button>
-      <button class="text-zinc-500 transition-colors hover:text-white" title="Edit">
+      <button
+        class="text-zinc-500 transition-colors hover:text-white"
+        title="Edit"
+        onclick={() => proxyService.openEditSheet(proxy)}
+      >
         <Pencil class="h-4 w-4" />
       </button>
       <button

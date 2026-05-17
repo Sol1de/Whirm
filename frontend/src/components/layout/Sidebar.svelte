@@ -21,7 +21,7 @@
 <aside class="flex h-full w-[240px] shrink-0 flex-col border-r border-zinc-800 bg-zinc-900">
   <!-- Logo -->
   <div class="flex h-[76px] items-center px-6">
-    <span class="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white">ProxyShift</span>
+    <span class="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white">Whirm</span>
   </div>
 
   <!-- Navigation -->

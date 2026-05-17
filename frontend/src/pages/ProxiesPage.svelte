@@ -13,4 +13,7 @@
   <ProxyTable />
 </main>
 
-<AddProxySheet open={proxyService.isAddSheetOpen} onClose={proxyService.closeAddSheet} />
+<AddProxySheet
+  open={proxyService.isAddSheetOpen || proxyService.isEditSheetOpen}
+  onClose={() => { proxyService.closeAddSheet(); proxyService.closeEditSheet(); }}
+/>

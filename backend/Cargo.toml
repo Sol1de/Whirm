@@ -1,6 +1,6 @@
 [package]
 name = "whirm"
-version = "0.1.0"
+version = "1.0.0"
 description = "A desktop app to manage your proxies, switch between them, and route your network traffic with ease."
 authors = ["S0lide <olide754@gmail.com>"]
 license = "MIT"
@@ -30,8 +30,8 @@ sysproxy = "0.3"
 reqwest = { version = "0.13.3", features = ["rustls", "socks"] }
 tokio = { version = "1.52.1", features = ["full"] }
 urlencoding = "2"
-sea-orm = { version = "2.0.0-rc.1", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros"] }
-sea-orm-migration = { version = "2.0.0-rc.1", features = ["sqlx-sqlite", "runtime-tokio-rustls"] }
+sea-orm = { version = "=2.0.0-rc.38", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros"] }
+sea-orm-migration = { version = "=2.0.0-rc.38", features = ["sqlx-sqlite", "runtime-tokio-rustls"] }
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 aes-gcm = "0.10"

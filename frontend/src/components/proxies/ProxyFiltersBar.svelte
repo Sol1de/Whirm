@@ -2,9 +2,6 @@
   import { proxyService } from '@services/proxy.service.svelte';
   import * as Select from '@ui/select';
   import { Plus } from '@lucide/svelte';
-
-  let regionFilter = $state('all');
-  let protocolFilter = $state('all');
 </script>
 
 <div class="flex items-end justify-between">
@@ -16,11 +13,15 @@
         class="font-['Space_Grotesk',sans-serif] text-xs font-medium uppercase tracking-[0.6px] text-zinc-500"
         >REGION</span
       >
-      <Select.Root type="single" bind:value={regionFilter}>
+      <Select.Root
+        type="single"
+        value={proxyService.regionFilter}
+        onValueChange={(v) => proxyService.setRegionFilter(v)}
+      >
         <Select.Trigger
           class="h-9 w-auto rounded-[2px] border-zinc-800 bg-zinc-900 text-sm text-white"
         >
-          {regionFilter === 'all' ? 'All Regions' : regionFilter}
+          {proxyService.regionFilter === 'all' ? 'All Regions' : proxyService.regionFilter === 'us' ? 'United States' : proxyService.regionFilter === 'eu' ? 'Europe' : 'Asia'}
         </Select.Trigger>
         <Select.Content class="rounded-[2px] border-zinc-800 bg-zinc-900">
           <Select.Item value="all" class="text-sm text-white hover:bg-zinc-800">All Regions</Select.Item>
@@ -37,11 +38,15 @@
         class="font-['Space_Grotesk',sans-serif] text-xs font-medium uppercase tracking-[0.6px] text-zinc-500"
         >PROTOCOL</span
       >
-      <Select.Root type="single" bind:value={protocolFilter}>
+      <Select.Root
+        type="single"
+        value={proxyService.protocolFilter}
+        onValueChange={(v) => proxyService.setProtocolFilter(v)}
+      >
         <Select.Trigger
           class="h-9 w-auto rounded-[2px] border-zinc-800 bg-zinc-900 text-sm text-white"
         >
-          {protocolFilter === 'all' ? 'All Protocols' : protocolFilter}
+          {proxyService.protocolFilter === 'all' ? 'All Protocols' : proxyService.protocolFilter}
         </Select.Trigger>
         <Select.Content class="rounded-[2px] border-zinc-800 bg-zinc-900">
           <Select.Item value="all" class="text-sm text-white hover:bg-zinc-800">All Protocols</Select.Item>

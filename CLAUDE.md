@@ -18,8 +18,8 @@ pnpm check        # TypeScript + Svelte type-check (run before committing)
 pnpm preview      # Preview production build
 
 # Tauri (desktop app) — requires Rust toolchain
-pnpm tauri dev    # Start full desktop app (launches Vite + Tauri window)
-pnpm tauri build  # Bundle desktop app for distribution
+pnpm tauri dev    # Start full backend app (launches Vite + Tauri window)
+pnpm tauri build  # Bundle backend app for distribution
 ```
 
 Integration tests live in `desktop/tests/` (crypto, db, proxy, session, settings). Run with `cargo test` from `desktop/`.

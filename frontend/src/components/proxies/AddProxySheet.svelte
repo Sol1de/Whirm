@@ -2,6 +2,7 @@
   import * as Sheet from "@ui/sheet";
   import { Input } from "@ui/input";
   import { proxyService } from "@services/proxy.service.svelte";
+  import { settingsService } from "@services/settings.service.svelte";
   import type { ProxyProtocol } from "@types";
   import { X, Info } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
@@ -20,6 +21,7 @@
   let username = $state("");
   let password = $state("");
   let isTesting = $state(false);
+  let editedProxy = $derived(proxyService.editingProxy);
 
   function resetForm() {
     proxyName = "";
@@ -33,27 +35,47 @@
   const protocols: ProxyProtocol[] = ["HTTPS", "SOCKS5", "HTTP"];
 
   async function handleSave() {
-    if (!proxyName.trim() || !host.trim() || !port.trim()) {
+    const isIncompleteProxyInfo = !proxyName.trim() || !host.trim() || !port.trim()
+    if (isIncompleteProxyInfo) {
       toast.error("Please fill in all required fields (name, host, port)");
       return;
     }
+
     const portNum = parseInt(port, 10);
-    if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+    const isInvalidProxyPort = isNaN(portNum) || portNum < 1 || portNum > 65535
+
+    if (isInvalidProxyPort) {
       toast.error("Port must be a number between 1 and 65535");
       return;
     }
+
     try {
-      await proxyService.add({
-        name: proxyName.trim(),
-        host: host.trim(),
-        port: portNum,
-        protocol,
-        country: "",
-        countryCode: "",
-        username: username.trim() || undefined,
-        password: password.trim() || undefined,
-      });
-      toast.success("Proxy added");
+      if (editedProxy) {
+        await proxyService.update(
+          editedProxy.id,
+          {
+            name: proxyName.trim(),
+            host: host.trim(),
+            port: portNum,
+            protocol,
+            username: username.trim() || undefined,
+          },
+          password.trim() || undefined,
+        );
+        toast.success("Proxy updated");
+      } else {
+        await proxyService.add({
+          name: proxyName.trim(),
+          host: host.trim(),
+          port: portNum,
+          protocol,
+          country: "",
+          countryCode: "",
+          username: username.trim() || undefined,
+          password: password.trim() || undefined,
+        });
+        toast.success("Proxy added");
+      }
       resetForm();
       onClose();
     } catch (error) {
@@ -82,6 +104,7 @@
         protocol,
         username.trim() || undefined,
         password.trim() || undefined,
+        settingsService.draft.globalTimeout,
       );
       toast.success(`Proxy reachable — latency: ${latency}ms`);
     } catch (error) {
@@ -90,6 +113,19 @@
       isTesting = false;
     }
   }
+
+  $effect(() => {
+    if (editedProxy) {
+      proxyName = editedProxy.name;
+      host = editedProxy.host;
+      port = String(editedProxy.port);
+      protocol = editedProxy.protocol;
+      username = editedProxy.username ?? "";
+      password = "";
+    } else {
+      resetForm();
+    }
+  });
 </script>
 
 <Sheet.Root {open} onOpenChange={(v) => { if (!v) { resetForm(); onClose(); } }}>
@@ -101,7 +137,7 @@
     <div
       class="flex items-center justify-between border-b border-zinc-800 px-6 py-5"
     >
-      <h2 class="text-base font-semibold text-white">Add New Proxy</h2>
+      <h2 class="text-base font-semibold text-white">{editedProxy ? "Edit Proxy" : "Add New Proxy"}</h2>
       <button
         class="text-zinc-400 transition-colors hover:text-white"
         onclick={onClose}
@@ -202,6 +238,7 @@
             type="password"
             name="add-proxy-password"
             bind:value={password}
+            placeholder={editedProxy ? "Leave blank to keep current" : ""}
             class="rounded-[2px] border-zinc-800 bg-[#09090b] text-white"
           />
         </div>
@@ -225,7 +262,7 @@
         class="flex-1 rounded-[2px] bg-white py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90"
         onclick={handleSave}
       >
-        Save Proxy
+        {editedProxy ? "Update Proxy" : "Save Proxy"}
       </button>
       <button
         class="rounded-[2px] border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"

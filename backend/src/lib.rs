@@ -55,8 +55,9 @@ async fn test_proxy(
     protocol: String,
     username: Option<String>,
     password: Option<String>,
+    timeout: Option<u64>,
 ) -> Result<u64, String> {
-    commands::proxy::test_proxy(host, port, protocol, username, password).await
+    commands::proxy::test_proxy(host, port, protocol, username, password, timeout).await
 }
 
 #[tauri::command]
