@@ -2,8 +2,8 @@ mod fixtures;
 use fixtures::{make_test_app, mem_db};
 
 use app_lib::commands::proxy::{
-    add_proxy, build_proxy_url, delete_proxy, get_proxies, update_proxy, AddProxyInput,
-    UpdateProxyInput,
+    add_proxy, build_proxy_url, delete_proxy, get_proxies, test_proxy_by_id, update_proxy,
+    AddProxyInput, UpdateProxyInput,
 };
 use app_lib::db::entities::{enums::proxy::{ProxyProtocol, ProxyStatus}, proxy};
 use pretty_assertions::assert_eq;
@@ -292,4 +292,14 @@ async fn add_proxy_rejects_empty_host() {
 
     let err = add_proxy(input, app.state_ref()).await.unwrap_err();
     assert!(err.contains("Host must not be empty"), "got: {err}");
+}
+
+#[tokio::test]
+async fn test_proxy_by_id_errors_when_proxy_missing() {
+    let app = make_test_app(mem_db().await);
+    // Returns before any network call when the id does not exist.
+    let err = test_proxy_by_id("does-not-exist".to_string(), app.state_ref())
+        .await
+        .unwrap_err();
+    assert!(err.contains("Proxy not found"), "got: {err}");
 }

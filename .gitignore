@@ -23,8 +23,8 @@ dist-ssr
 *.sw?
 
 # Tauri — Rust build artifacts (can be several GB)
-desktop/target/
-desktop/gen/
+backend/target/
+backend/gen/
 
 # Environment variables
 .env

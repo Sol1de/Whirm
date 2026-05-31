@@ -1,4 +1,4 @@
-export type Route = 'dashboard' | 'proxies' | 'settings';
+export type Route = 'dashboard' | 'proxies' | 'history' | 'settings';
 
 export type ProxyProtocol = 'SOCKS5' | 'HTTP' | 'HTTPS';
 export type ProxyStatus = 'active' | 'inactive' | 'error';
@@ -32,4 +32,12 @@ export interface ConnectionSession {
   connectedAt: string;
   disconnectedAt: string | null;
   ipAddress: string | null;
+}
+
+export interface AppNotification {
+  id: string;
+  type: 'info' | 'success' | 'error' | 'warning';
+  message: string;
+  timestamp: string;
+  read: boolean;
 }

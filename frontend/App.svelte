@@ -4,6 +4,7 @@
   import Sidebar from '@components/layout/Sidebar.svelte';
   import DashboardPage from '@pages/DashboardPage.svelte';
   import ProxiesPage from '@pages/ProxiesPage.svelte';
+  import HistoryPage from '@pages/HistoryPage.svelte';
   import SettingsPage from '@pages/SettingsPage.svelte';
   import { Toaster } from '@ui/sonner';
   import { toast } from 'svelte-sonner';
@@ -28,6 +29,8 @@
       <DashboardPage />
     {:else if navigation.current === 'proxies'}
       <ProxiesPage />
+    {:else if navigation.current === 'history'}
+      <HistoryPage />
     {:else if navigation.current === 'settings'}
       <SettingsPage />
     {/if}

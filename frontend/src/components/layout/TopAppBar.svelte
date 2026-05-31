@@ -2,7 +2,9 @@
   import { Search, Plus, RotateCw, Bell } from '@lucide/svelte';
   import { navigation } from '@stores/navigation.svelte';
   import { proxyService } from '@services/proxy.service.svelte';
+  import { notificationService } from '@services/notification.service.svelte';
   import { toast } from 'svelte-sonner';
+  import NotificationPanel from '@components/layout/NotificationPanel.svelte';
 
   interface Props {
     title: string;
@@ -11,24 +13,29 @@
 
   let { title, searchPlaceholder = 'Search...' }: Props = $props();
 
-  let searchQuery = $state('');
+  let showNotifications = $state(false);
 
   function handleAdd() {
     navigation.navigate('proxies');
     proxyService.openAddSheet();
   }
 
-  function handleRefresh() {
-    toast.success('Refreshed');
+  async function handleRefresh() {
+    try {
+      await proxyService.getProxies();
+      toast.success('Refreshed');
+    } catch (error) {
+      toast.error(`Refresh failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   function handleBell() {
-    toast.info('No new notifications');
+    showNotifications = !showNotifications;
   }
 </script>
 
 <header
-  class="flex h-[56px] shrink-0 items-center justify-between border-b border-zinc-800 bg-[#09090b] px-6"
+  class="relative flex h-[56px] shrink-0 items-center justify-between border-b border-zinc-800 bg-[#09090b] px-6"
 >
   <!-- Title -->
   <h1
@@ -46,7 +53,8 @@
       <input
         type="text"
         placeholder={searchPlaceholder}
-        bind:value={searchQuery}
+        value={proxyService.searchQuery}
+        oninput={(e) => proxyService.setSearch((e.target as HTMLInputElement).value)}
         class="h-9 w-64 rounded-[2px] border border-zinc-800 bg-[#09090b] pl-9 pr-3 text-sm text-white placeholder:text-[#6b7280] focus:outline-none focus:ring-1 focus:ring-zinc-600"
       />
     </div>
@@ -75,8 +83,17 @@
         title="Notifications"
       >
         <Bell class="h-4 w-4" />
-        <span class="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-violet-300"></span>
+        {#if notificationService.unreadCount > 0}
+          <span class="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-violet-300"></span>
+        {/if}
       </button>
     </div>
   </div>
+
+  <!-- Notification panel dropdown -->
+  {#if showNotifications}
+    <div class="absolute right-6 top-[52px] z-50">
+      <NotificationPanel onClose={() => (showNotifications = false)} />
+    </div>
+  {/if}
 </header>

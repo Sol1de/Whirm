@@ -1,7 +1,7 @@
 <script lang="ts">
   import { proxyService } from "@services/proxy.service.svelte";
   import ProxyTableRow from "./ProxyTableRow.svelte";
-  import { Network, Plus } from "@lucide/svelte";
+  import { Network } from "@lucide/svelte";
 </script>
 
 <div class="rounded-[2px] border border-zinc-800 bg-zinc-900/50 p-px">
@@ -23,7 +23,7 @@
 
     <!-- Body -->
     <tbody>
-      {#each proxyService.proxies as proxy (proxy.id)}
+      {#each proxyService.filteredProxies as proxy (proxy.id)}
         <ProxyTableRow {proxy} />
       {:else}
         <tr>

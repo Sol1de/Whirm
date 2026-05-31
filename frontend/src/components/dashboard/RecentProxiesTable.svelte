@@ -19,12 +19,6 @@
       toast.error(`Connection failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
-
-  const protocolColors: Record<string, string> = {
-    SOCKS5: 'SOCKS5',
-    HTTP: 'HTTP',
-    HTTPS: 'HTTPS'
-  };
 </script>
 
 <div class="rounded-[2px] border border-zinc-800 bg-zinc-900">
@@ -37,7 +31,7 @@
     </h3>
     <button
       class="text-xs text-zinc-500 transition-colors hover:text-white"
-      onclick={() => navigation.navigate('proxies')}
+      onclick={() => navigation.navigate('history')}
     >
       View All History ›
     </button>

@@ -1,11 +1,13 @@
 pub mod commands;
 pub mod crypto;
 pub mod db;
+pub mod net;
 
 use std::sync::Mutex;
 
 use chrono::Utc;
 use db::entities::connection_session;
+use net::RelayHandle;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrait};
 use sysproxy::Sysproxy;
 use tauri::{Manager, State};
@@ -55,8 +57,19 @@ async fn test_proxy(
     protocol: String,
     username: Option<String>,
     password: Option<String>,
+    timeout: Option<u64>,
 ) -> Result<u64, String> {
-    commands::proxy::test_proxy(host, port, protocol, username, password).await
+    commands::proxy::test_proxy(host, port, protocol, username, password, timeout).await
+}
+
+#[tauri::command]
+async fn test_proxy_by_id(id: String, state: State<'_, AppState>) -> Result<u64, String> {
+    commands::proxy::test_proxy_by_id(id, &state).await
+}
+
+#[tauri::command]
+async fn get_throughput(state: State<'_, AppState>) -> Result<commands::proxy::Throughput, String> {
+    commands::proxy::get_throughput(&state).await
 }
 
 #[tauri::command]
@@ -101,6 +114,8 @@ pub struct AppState {
     pub db: DatabaseConnection,
     pub active_session_id: Mutex<Option<String>>,
     pub active_proxy_id: Mutex<Option<String>>,
+    /// Handle to the local forwarding relay while a proxy is connected.
+    pub relay: Mutex<Option<RelayHandle>>,
 }
 
 fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -113,6 +128,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         db,
         active_session_id: Mutex::new(None),
         active_proxy_id: Mutex::new(None),
+        relay: Mutex::new(None),
     });
 
     if cfg!(debug_assertions) {
@@ -127,6 +143,14 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn handle_exit(app_handle: &tauri::AppHandle) {
+    // Stop the relay first so no traffic keeps flowing as we restore the proxy.
+    {
+        let state = app_handle.state::<AppState>();
+        if let Some(handle) = state.relay.lock().ok().and_then(|mut g| g.take()) {
+            handle.shutdown();
+        }
+    }
+
     let proxy = {
         let state = app_handle.state::<AppState>();
         state.saved_proxy.lock().ok().and_then(|mut g| g.take())
@@ -166,6 +190,8 @@ pub fn run() {
             connect_proxy,
             disconnect_proxy,
             test_proxy,
+            test_proxy_by_id,
+            get_throughput,
             get_proxies,
             add_proxy,
             update_proxy,

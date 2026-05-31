@@ -24,6 +24,7 @@ pub fn make_test_app(db: DatabaseConnection) -> TestApp {
             db,
             active_session_id: Mutex::new(None),
             active_proxy_id: Mutex::new(None),
+            relay: Mutex::new(None),
         },
     }
 }
