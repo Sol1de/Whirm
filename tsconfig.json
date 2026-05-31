@@ -24,8 +24,8 @@
       "@types": ["./frontend/src/types"],
       "@types/*": ["./frontend/src/types/*"],
       "@utils": ["./frontend/src/utils"],
-      "@hooks": ["./frontend/src/hooks"],
-      "@hooks/*": ["./frontend/src/hooks/*"],
+      "@lib": ["./frontend/src/lib"],
+      "@lib/*": ["./frontend/src/lib/*"]
     }
   }
 }

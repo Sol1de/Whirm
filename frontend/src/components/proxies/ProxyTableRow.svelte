@@ -3,6 +3,7 @@
   import { Plug2, Pencil, Trash2 } from '@lucide/svelte';
   import { proxyService } from '@services/proxy.service.svelte';
   import { connectionService } from '@services/connection.service.svelte';
+  import * as AlertDialog from '@ui/alert-dialog';
   import { toast } from 'svelte-sonner';
 
   interface Props {
@@ -10,6 +11,8 @@
   }
 
   let { proxy }: Props = $props();
+
+  let showDeleteConfirm = $state(false);
 
   function countryCodeToFlag(code: string): string {
     if (!code || code.length !== 2) return '';
@@ -112,10 +115,32 @@
       <button
         class="text-zinc-500 transition-colors hover:text-red-400"
         title="Delete"
-        onclick={handleDelete}
+        onclick={() => (showDeleteConfirm = true)}
       >
         <Trash2 class="h-4 w-4" />
       </button>
     </div>
   </td>
 </tr>
+
+<AlertDialog.Root bind:open={showDeleteConfirm}>
+  <AlertDialog.Content class="rounded-[2px] border-zinc-800 bg-zinc-900 text-white">
+    <AlertDialog.Header>
+      <AlertDialog.Title>Delete proxy “{proxy.name}”?</AlertDialog.Title>
+      <AlertDialog.Description class="text-zinc-400">
+        This permanently removes the proxy and its saved credentials. This action
+        cannot be undone.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel
+        class="rounded-[2px] border border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800"
+        >Cancel</AlertDialog.Cancel
+      >
+      <AlertDialog.Action
+        class="rounded-[2px] bg-red-500 text-white hover:bg-red-600"
+        onclick={handleDelete}>Delete</AlertDialog.Action
+      >
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>

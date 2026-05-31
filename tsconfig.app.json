@@ -29,8 +29,8 @@
       "@services/*": ["./frontend/src/services/*"],
       "@stores": ["./frontend/src/stores"],
       "@stores/*": ["./frontend/src/stores/*"],
-      "@hooks": ["./frontend/src/hooks"],
-      "@hooks/*": ["./frontend/src/hooks/*"],
+      "@lib": ["./frontend/src/lib"],
+      "@lib/*": ["./frontend/src/lib/*"],
       "@types": ["./frontend/src/types"],
       "@types/*": ["./frontend/src/types/*"],
       "@utils": ["./frontend/src/utils"]

@@ -175,6 +175,14 @@ describe('proxyService', () => {
       proxyService.setLatency('proxy-1', 42);
       expect(proxyService.getLatency('proxy-1')).toBe(42);
     });
+
+    it('testLatency calls test_proxy_by_id and stores the result', async () => {
+      mockedInvoke.mockResolvedValueOnce(123);
+      const ms = await proxyService.testLatency(mockProxy);
+      expect(ms).toBe(123);
+      expect(mockedInvoke).toHaveBeenCalledWith('test_proxy_by_id', { id: 'proxy-1' });
+      expect(proxyService.getLatency('proxy-1')).toBe(123);
+    });
   });
 
   describe('edit sheet', () => {

@@ -1,9 +1,11 @@
 <script lang="ts">
   import * as Sheet from "@ui/sheet";
+  import * as Select from "@ui/select";
   import { Input } from "@ui/input";
   import { proxyService } from "@services/proxy.service.svelte";
   import { settingsService } from "@services/settings.service.svelte";
   import type { ProxyProtocol } from "@types";
+  import { COUNTRIES, countryName } from "@lib/countries";
   import { X, Info } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
 
@@ -14,10 +16,13 @@
 
   let { open, onClose }: Props = $props();
 
+  const defaultProtocol = (): ProxyProtocol => settingsService.draft.proxyProtocol;
+
   let proxyName = $state("");
   let host = $state("");
   let port = $state("");
-  let protocol = $state<ProxyProtocol>("SOCKS5");
+  let protocol = $state<ProxyProtocol>(defaultProtocol());
+  let countryCode = $state("");
   let username = $state("");
   let password = $state("");
   let isTesting = $state(false);
@@ -27,7 +32,8 @@
     proxyName = "";
     host = "";
     port = "";
-    protocol = "SOCKS5";
+    protocol = defaultProtocol();
+    countryCode = "";
     username = "";
     password = "";
   }
@@ -58,6 +64,8 @@
             host: host.trim(),
             port: portNum,
             protocol,
+            country: countryName(countryCode),
+            countryCode,
             username: username.trim() || undefined,
           },
           password.trim() || undefined,
@@ -69,8 +77,8 @@
           host: host.trim(),
           port: portNum,
           protocol,
-          country: "",
-          countryCode: "",
+          country: countryName(countryCode),
+          countryCode,
           username: username.trim() || undefined,
           password: password.trim() || undefined,
         });
@@ -98,14 +106,19 @@
     toast.info("Testing connection…");
 
     try {
-      const latency = await proxyService.test(
-        host.trim(),
-        portNum,
-        protocol,
-        username.trim() || undefined,
-        password.trim() || undefined,
-        settingsService.draft.globalTimeout,
-      );
+      // Editing a saved proxy without typing a new password → test by id so
+      // the backend uses the stored (encrypted) password.
+      const latency =
+        editedProxy && !password.trim()
+          ? await proxyService.testById(editedProxy.id)
+          : await proxyService.test(
+              host.trim(),
+              portNum,
+              protocol,
+              username.trim() || undefined,
+              password.trim() || undefined,
+              settingsService.draft.globalTimeout,
+            );
       toast.success(`Proxy reachable — latency: ${latency}ms`);
     } catch (error) {
       toast.error(`Test failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -120,6 +133,7 @@
       host = editedProxy.host;
       port = String(editedProxy.port);
       protocol = editedProxy.protocol;
+      countryCode = editedProxy.countryCode ?? "";
       username = editedProxy.username ?? "";
       password = "";
     } else {
@@ -209,6 +223,32 @@
             </button>
           {/each}
         </div>
+      </div>
+
+      <!-- Country -->
+      <div class="flex flex-col gap-2">
+        <label
+          class="font-['Space_Grotesk',sans-serif] text-xs font-medium uppercase tracking-[0.6px] text-zinc-500"
+          for="add-proxy-country">COUNTRY</label
+        >
+        <Select.Root
+          type="single"
+          value={countryCode}
+          onValueChange={(v) => (countryCode = v ?? "")}
+        >
+          <Select.Trigger
+            class="rounded-[2px] border-zinc-800 bg-[#09090b] text-sm text-white"
+          >
+            {countryCode ? countryName(countryCode) : "Select a country"}
+          </Select.Trigger>
+          <Select.Content class="max-h-64 overflow-y-auto rounded-[2px] border-zinc-800 bg-zinc-900">
+            {#each COUNTRIES as c (c.code)}
+              <Select.Item value={c.code} class="text-sm text-white hover:bg-zinc-800"
+                >{c.name}</Select.Item
+              >
+            {/each}
+          </Select.Content>
+        </Select.Root>
       </div>
 
       <!-- Authentication (optional) -->

@@ -4316,6 +4316,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef86cd5876211988985292b91c96a8f2d298df24e75989a43a3c73f2d4d8168b"
 dependencies = [
  "aws-lc-rs",
+ "log 0.4.29",
  "once_cell",
  "ring",
  "rustls-pki-types",
@@ -5919,6 +5920,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-socks"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7e2948f60dbe26b35f2c7fb74ac2854c1fddded0fe9d7548fcc674a246f7615"
+dependencies = [
+ "either",
+ "futures-util",
+ "thiserror 1.0.69",
+ "tokio",
+]
+
+[[package]]
 name = "tokio-stream"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5938,6 +5951,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
+ "futures-util",
  "pin-project-lite",
  "tokio",
 ]
@@ -6709,6 +6723,7 @@ name = "whirm"
 version = "1.0.0"
 dependencies = [
  "aes-gcm",
+ "async-trait",
  "base64 0.22.1",
  "chrono",
  "hkdf 0.13.0",
@@ -6726,8 +6741,12 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-log",
  "tokio",
+ "tokio-rustls",
+ "tokio-socks",
+ "tokio-util",
  "urlencoding",
  "uuid",
+ "webpki-roots 0.26.11",
 ]
 
 [[package]]

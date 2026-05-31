@@ -99,14 +99,9 @@ function createProxyService() {
       latencyMap = new Map(latencyMap).set(id, ms);
     },
     async testLatency(proxy: Proxy): Promise<number> {
-      const ms = await invoke<number>('test_proxy', {
-        host: proxy.host,
-        port: proxy.port,
-        protocol: proxy.protocol,
-        username: proxy.username ?? null,
-        password: null,
-        timeout: null,
-      });
+      // Test by id so the backend decrypts the saved password itself —
+      // the ciphertext never round-trips through the frontend.
+      const ms = await invoke<number>('test_proxy_by_id', { id: proxy.id });
       latencyMap = new Map(latencyMap).set(proxy.id, ms);
       return ms;
     },
@@ -173,6 +168,9 @@ function createProxyService() {
         password: password ?? null,
         timeout: timeout ?? null,
       });
+    },
+    testById(id: string): Promise<number> {
+      return invoke<number>('test_proxy_by_id', { id });
     },
     _reset() {
       proxies = [];

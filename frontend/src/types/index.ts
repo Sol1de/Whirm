@@ -1,4 +1,4 @@
-export type Route = 'dashboard' | 'proxies' | 'settings';
+export type Route = 'dashboard' | 'proxies' | 'history' | 'settings';
 
 export type ProxyProtocol = 'SOCKS5' | 'HTTP' | 'HTTPS';
 export type ProxyStatus = 'active' | 'inactive' | 'error';

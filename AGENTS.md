@@ -22,7 +22,7 @@ pnpm tauri dev    # Start full backend app (launches Vite + Tauri window)
 pnpm tauri build  # Bundle backend app for distribution
 ```
 
-Integration tests live in `desktop/tests/` (crypto, db, proxy, session, settings). Run with `cargo test` from `desktop/`.
+Integration tests live in `backend/tests/` (crypto, db, proxy, session, settings). Run with `cargo test` from `backend/`.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ whirm/
 │   ├── main.ts
 │   ├── app.css
 │   └── src/           — application source
-└── desktop/           — native desktop app (Rust + Tauri 2)
+└── backend/           — native desktop app (Rust + Tauri 2)
     └── src/
         ├── lib.rs     — app setup, state, entry point
         ├── commands/  — Tauri command handlers (proxy, settings, session)
@@ -78,30 +78,30 @@ Navigation remains in `frontend/src/stores/navigation.svelte.ts` (only store lef
 ### Database (SeaORM + SQLite)
 The backend uses **SeaORM 2.0-rc** with SQLite. The database file (`whirm.db`) is created in the Tauri app data directory. Migrations run automatically on startup via `db::init()`.
 
-- **Entities** live in `desktop/src/db/entities/` — `proxy`, `settings`, `connection_session`, plus enums in `entities/enums/proxy.rs`
-- **Migrations** live in `desktop/src/db/migrations/` — named `m20240101_NNNNNN_description.rs`, registered in `migrations/mod.rs`
+- **Entities** live in `backend/src/db/entities/` — `proxy`, `settings`, `connection_session`, plus enums in `entities/enums/proxy.rs`
+- **Migrations** live in `backend/src/db/migrations/` — named `m20240101_NNNNNN_description.rs`, registered in `migrations/mod.rs`
 - A default settings row is seeded on first run if none exists
 - Entity models derive `Serialize` with `#[serde(rename_all = "camelCase")]` so field names match TypeScript types over the Tauri bridge
 
 When adding a new table: create a migration file, register it in `migrations/mod.rs`, create an entity module, and register it in `entities/mod.rs`.
 
 ### Tauri integration
-The Rust backend lives in `desktop/`. Frontend-to-Rust calls use `invoke()` from `@tauri-apps/api/core`.
+The Rust backend lives in `backend/`. Frontend-to-Rust calls use `invoke()` from `@tauri-apps/api/core`.
 
-Tauri commands are split into modules under `desktop/src/commands/`:
+Tauri commands are split into modules under `backend/src/commands/`:
 - **`proxy.rs`** — `connect_proxy`, `disconnect_proxy`, `test_proxy`, `get_proxies`, `add_proxy`, `update_proxy`, `delete_proxy`
 - **`settings.rs`** — `get_settings`, `save_settings`
 - **`session.rs`** — `open_session`, `close_session`, `get_sessions`
 
 Commands that accept structured input use dedicated `*Input` structs with `#[serde(rename_all = "camelCase")]`. On the frontend, pass inputs as `{ input: { ... } }` to match Tauri's argument naming.
 
-`AppState` (Tauri managed state, defined in `desktop/src/lib.rs`) holds: `saved_proxy: Mutex<Option<Sysproxy>>`, `db: DatabaseConnection`, `active_session_id: Mutex<Option<String>>`, `active_proxy_id: Mutex<Option<String>>`. The exit handler restores the original system proxy and closes the active session on app exit — this prevents stale proxy settings if the app crashes.
+`AppState` (Tauri managed state, defined in `backend/src/lib.rs`) holds: `saved_proxy: Mutex<Option<Sysproxy>>`, `db: DatabaseConnection`, `active_session_id: Mutex<Option<String>>`, `active_proxy_id: Mutex<Option<String>>`. The exit handler restores the original system proxy and closes the active session on app exit — this prevents stale proxy settings if the app crashes.
 
 Always use typed generics on `invoke()` calls: `invoke<string>(...)`, `invoke<number>(...)`, etc.
 
 Key Rust deps: `sysproxy` (system proxy reads/writes), `reqwest` with SOCKS5 support (connectivity test), `sea-orm` + `sea-orm-migration` (database), `chrono` (timestamps), `uuid` (primary keys).
 
-**Password encryption**: proxy passwords are encrypted at rest via AES-256-GCM with a machine-specific key derived using HKDF-SHA256 (`machine-uid` crate, salt `"whirm-field-v1"`). Implementation in `desktop/src/crypto.rs`. `add_proxy`/`update_proxy` encrypt before DB write; `connect_proxy` decrypts before use. Never compare or forward the raw DB `password` field — it is ciphertext.
+**Password encryption**: proxy passwords are encrypted at rest via AES-256-GCM with a machine-specific key derived using HKDF-SHA256 (`machine-uid` crate, salt `"whirm-field-v1"`). Implementation in `backend/src/crypto.rs`. `add_proxy`/`update_proxy` encrypt before DB write; `connect_proxy` decrypts before use. Never compare or forward the raw DB `password` field — it is ciphertext.
 
 **System proxy bypass**: `connect_proxy` hardcodes bypass list `"localhost,127.0.0.1,<local>"` — not currently user-configurable.
 

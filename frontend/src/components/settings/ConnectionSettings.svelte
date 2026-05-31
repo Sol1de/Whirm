@@ -42,10 +42,11 @@
     <div class="flex items-center justify-between px-6 py-6">
       <div class="flex flex-col gap-1">
         <p class="text-sm text-white" style="font-family: Inter, sans-serif;">
-          DNS Leak Protection
+          Remote DNS Resolution
         </p>
         <p class="text-xs text-zinc-500">
-          Enforce encrypted DNS queries through proxy tunnel
+          Resolve hostnames at the upstream proxy instead of locally for relayed
+          traffic. Not full OS-level DNS-leak protection.
         </p>
       </div>
       <Switch

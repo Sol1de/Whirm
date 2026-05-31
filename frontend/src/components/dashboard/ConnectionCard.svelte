@@ -2,7 +2,6 @@
   import { connectionService } from "@services/connection.service.svelte";
   import { proxyService } from "@services/proxy.service.svelte";
   import { toast } from "svelte-sonner";
-  import { CodeXml } from "@lucide/svelte";
 
   const statusConfig = {
     connected: {
@@ -103,11 +102,6 @@
         : isConnecting
           ? "⏻  CONNECTING…"
           : "⏻  CONNECT"}
-    </button>
-    <button
-      class="rounded-[2px] border border-zinc-800 p-2 text-zinc-400 transition-colors hover:text-white"
-    >
-      <CodeXml class="h-4 w-4" />
     </button>
   </div>
 </div>

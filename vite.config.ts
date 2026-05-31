@@ -11,7 +11,7 @@ const aliases = {
   "@stores":     path.resolve("./frontend/src/stores"),
   "@types":      path.resolve("./frontend/src/types"),
   "@utils":      path.resolve("./frontend/src/utils"),
-  "@hooks":      path.resolve("./frontend/src/hooks"),
+  "@lib":        path.resolve("./frontend/src/lib"),
 };
 
 // https://vite.dev/config/
